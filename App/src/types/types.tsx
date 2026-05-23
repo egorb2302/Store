@@ -15,7 +15,8 @@ export interface Product {
         | AccesoriesSpecs
         | MonitorSpecs
         | TabletSpecs
-        | ComponentSpecs
+        | ComponentSpecs,
+    quantity?: number,
 }
 
 type LaptopSpecs = {
@@ -83,3 +84,24 @@ type Category = "laptops"
     | "monitors"
     | "tablests"
     | "components"
+
+interface CartItem extends Product {
+    quantity: number
+}
+
+export interface StoreType {
+    items: CartItem[],
+    addItem: (product: Product) => void,
+    removeItem: (id: number) => void,
+    updateQuantity: (id: number, quantity: number) => void,
+    clearCart: () => void,
+    getTotalPrice: () => number,
+    getTotalItems: () => number
+}
+
+export interface AuthType {
+    user: User | null,
+    isAuth: boolean, 
+    setUser: (user: User | null) => void,
+    logout: () => void
+}
