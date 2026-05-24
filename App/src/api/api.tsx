@@ -1,11 +1,8 @@
 import type { Product, User } from "../types/types";
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-const API_PRODUCTS: string | undefined = process.env.API_PRODUCTS
-const API_USERS: string | undefined = process.env.API_USERS
-const API_ORDERS: string | undefined = process.env.API_ORDERS
+const API_PRODUCTS: string = 'http://localhost:3000/products'
+const API_USERS: string = 'http://localhost:3000/users'
+const API_ORDERS: string = 'http://localhost:3000/orders'
 
 export const fetchProducts = async (): Promise<Product[]> => {
     const response = await fetch(`${API_PRODUCTS}`);

@@ -19,28 +19,28 @@ export interface Product {
     quantity?: number,
 }
 
-type LaptopSpecs = {
+export type LaptopSpecs = {
     processor: string,
     ram: string,
     storage: string,
     display: string,
 }
 
-type PhoneSpecs = {
+export type PhoneSpecs = {
     processor: string,
     storage: string,
     display: string,
     camera: string,
 }
 
-type AudioSpecs = {
+export type AudioSpecs = {
     type: string,
     battery: string,
     noiseCanceling: boolean,
     wireless: boolean,
 }
 
-type AccesoriesSpecs = {
+export type AccesoriesSpecs = {
     backlight?: boolean,
     connection?: string,
     type?: string,
@@ -49,21 +49,21 @@ type AccesoriesSpecs = {
     buttons?: string 
 }
 
-type MonitorSpecs = {
+export type MonitorSpecs = {
     size: string,
     resolutioon: string,
     refreshRate: string,
     responseTime: string,
 }
 
-type TabletSpecs = {
+export type TabletSpecs = {
     applePencil: boolean,
     processor: string,
     storage: string,
     display: string,
 }
 
-type ComponentSpecs = {
+export type ComponentSpecs = {
     memory: string,
     dlss: string,
     rayTracing: boolean,
