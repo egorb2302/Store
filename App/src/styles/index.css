@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
 body {
-    background-color: rgb(70, 107, 65);
+    background-image: linear-gradient(to bottom, var(--color-emerald-900), var(--color-emerald-950));
+}
+
+input:focus {
+    outline: none;
 }
