@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "../api/api";
 import { Link, useSearchParams } from "react-router";
 import useCartStore from "../stores/store";
-import type { Product } from "../types/types";
+import type { Category, Product } from "../types/types";
 import { useState, useEffect, useRef } from "react";
 
 export default function Catalog() {
@@ -13,6 +13,8 @@ export default function Catalog() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [getParams, setParams] = useState({ title: ''});
     const [clicked, setClicked] = useState<number[]>([]);
+    const [category, setCategory] = useState<Category[]>([]);
+    const [onlyInStock, setOnlyInStock] = useState<boolean>(false);
     const { addItem, items } = useCartStore();
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -24,11 +26,27 @@ export default function Catalog() {
 
     if (!products) return
 
-    const filtredProducts = products.filter(p => {
-        if (title === '') return true
+    const categorySearch = (cat: Category) => {
+        setCategory(prev => {
+            if (prev.includes(cat)) {
+                return prev.filter(c => c !== cat)
+            } else {
+                return [...prev, cat]
+            }
+        })
+    }
 
-        const titleSearch = p.name.toLowerCase().includes(title)
-        return titleSearch;
+    const filtredProducts = products.filter(p => {
+        if (title === '' && category.length === 0 && !onlyInStock) return true
+
+        const titleSearch = p.name.toLowerCase().includes(title.toLowerCase())
+        const categoryItemSearch = category.includes(p.category);
+        
+        if (onlyInStock && p.inStock) {
+            return true;
+        }
+
+        return titleSearch && categoryItemSearch;
     })
 
     const updateFilter = (value: string) => {
@@ -103,15 +121,27 @@ export default function Catalog() {
                         <div className="space-y-2">
                             <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
                                             transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" /> Solar Devices
+                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('laptops')}/> Laptops
                             </label>
                             <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
                                             transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" /> Home Tech
+                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('phones')}/> Phones
                             </label>
                             <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
                                             transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" /> Accessories
+                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('accesories')}/> Accesories
+                            </label>
+                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
+                                            transition-colors duration-300 cursor-pointer">
+                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('monitors')}/> Monitors
+                            </label>
+                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
+                                            transition-colors duration-300 cursor-pointer">
+                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('tablets')}/> Tablets
+                            </label>
+                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
+                                            transition-colors duration-300 cursor-pointer">
+                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('components')}/> Components
                             </label>
                         </div>
                     </div>
@@ -120,7 +150,8 @@ export default function Catalog() {
                         <h4 className="text-mauve-300 font-semibold text-sm uppercase tracking-wider">Availability</h4>
                         <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
                                         transition-colors duration-300 cursor-pointer">
-                            <input type="checkbox" className="accent-emerald-600" /> In Stock
+                            <input type="checkbox" className="accent-emerald-600" 
+                            onChange={(e) => setOnlyInStock(e.target.checked)}/> In Stock
                         </label>
                     </div>
                     <div className="border-t border-mauve-700 my-4"></div>

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import useCartStore from "../stores/store";
 import { useMutation } from "@tanstack/react-query";
-import { removeProduct } from "../api/api";
+import { addOrder, removeProduct } from "../api/api";
 import type { Product } from '../types/types';
 
 const orderSchema = z.object({
@@ -14,7 +14,7 @@ const orderSchema = z.object({
 
 type OrderForm = z.infer<typeof orderSchema>;
 
-export default function CartOrder() {
+export default function CartOrder({ cartItems }: { cartItems: Product[] }) {
     const { register, handleSubmit, formState: { errors, isSubmitting }} = useForm<OrderForm>({
         resolver: zodResolver(orderSchema)
     })
@@ -35,6 +35,10 @@ export default function CartOrder() {
     const onSubmit = async (data: OrderForm) => {
         await new Promise(resolve => setTimeout(resolve, 1000));
         mutate.mutate();
+        cartItems.forEach(item => {
+            addOrder(item)
+        })
+
         console.log('Form data: ' + JSON.stringify(data))
         alert('Ordering is succesful!');
     }

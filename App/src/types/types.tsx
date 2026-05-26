@@ -80,12 +80,12 @@ export interface User {
     confirmPass?: string
 }
 
-type Category = "laptops" 
+export type Category = "laptops" 
     | "phones" 
     | "audio" 
     | "accesories" 
     | "monitors"
-    | "tablests"
+    | "tablets"
     | "components"
 
 interface CartItem extends Product {

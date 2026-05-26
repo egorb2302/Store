@@ -136,7 +136,7 @@ export default function Cart() {
                 </div>
             </div>
             <div className="w-full lg:w-2/5">
-                <CartOrder />
+                <CartOrder cartItems={items} />
             </div>
         </div>
     )
