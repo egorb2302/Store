@@ -74,7 +74,8 @@ export interface User {
     id: string,
     email: string,
     password: string,
-    name?: string
+    name?: string,
+    confirmPass: string
 }
 
 type Category = "laptops" 

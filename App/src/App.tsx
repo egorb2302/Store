@@ -6,6 +6,7 @@ import Catalog from "./pages/Catalog";
 import Product from "./pages/Product";
 import Cart from "./pages/Cart";
 import HeaderLayout from "./components/HeaderLayout";
+import useAuthStore from "./stores/auth";
 
 export default function App() {
   return (
