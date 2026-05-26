@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export interface Product {
     id: number,
     name: string,
@@ -75,7 +77,7 @@ export interface User {
     email: string,
     password: string,
     name?: string,
-    confirmPass: string
+    confirmPass?: string
 }
 
 type Category = "laptops" 
@@ -104,5 +106,12 @@ export interface AuthType {
     user: User | null,
     isAuth: boolean, 
     setUser: (user: User | null) => void,
-    logout: () => void
+    logout: () => void,
+    checkAuth: () => Promise<void>
+}
+
+export interface ProtectedRouteTypes {
+    children: ReactNode,
+    isAuth: boolean,
+    redirectTo: string
 }

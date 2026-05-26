@@ -1,9 +1,11 @@
 import { NavLink, Outlet } from "react-router";
 import cartIcon from '../assets/shopping-cart.svg';
 import useCartStore from "../stores/store";
+import useAuthStore from "../stores/auth";
 
 export default function HeaderLayout() {
     const { getTotalItems } = useCartStore();
+    const { isAuth } = useAuthStore(); 
 
     return (
         <>
@@ -43,18 +45,35 @@ export default function HeaderLayout() {
                         )}
                     </NavLink>
                     <div className="hidden md:flex gap-3">
-                        <button className="px-5 py-2 rounded-xl border-2 border-mauve-600 
-                                        text-mauve-300 font-semibold cursor-pointer
-                                        hover:border-emerald-700 hover:text-emerald-400
-                                        transition-all duration-300">
-                            Login
-                        </button>
-                        <button className="px-5 py-2 rounded-xl bg-linear-to-r from-emerald-800 to-green-700 
-                                        text-mauve-100 font-semibold cursor-pointer
-                                        hover:from-green-700 hover:to-emerald-800
-                                        transition-all duration-300 hover:scale-105">
-                            Sign Up
-                        </button>
+                        {!isAuth ? (
+                        <>
+                            <NavLink to="/login">
+                                <button className="px-5 py-2 rounded-xl border-2 border-mauve-600 
+                                                hover:border-emerald-700 hover:text-emerald-400
+                                                text-mauve-300 font-semibold cursor-pointer
+                                                transition-all duration-300">
+                                    Login
+                                </button>
+                            </NavLink>
+                            <NavLink to="/signup">
+                                <button className="px-5 py-2 rounded-xl bg-linear-to-r from-emerald-800 to-green-700 
+                                                text-mauve-100 font-semibold cursor-pointer
+                                                hover:from-green-700 hover:to-emerald-800
+                                                transition-all duration-300 hover:scale-105">
+                                    Sign Up
+                                </button>
+                            </NavLink>
+                        </>
+                        ) : (
+                            <NavLink to="/profile">
+                                <button className="px-5 py-2 rounded-xl bg-linear-to-r from-emerald-800 to-green-700 
+                                                text-mauve-100 font-semibold cursor-pointer
+                                                hover:from-green-700 hover:to-emerald-800
+                                                transition-all duration-300 hover:scale-105">
+                                    Profile
+                                </button>
+                            </NavLink>
+                        )}
                     </div>
                     <button className="lg:hidden p-2">
                         <svg className="w-6 h-6 fill-mauve-300" viewBox="0 0 24 24">
@@ -105,8 +124,6 @@ export default function HeaderLayout() {
                                 </li>
                             </ul>
                         </div>
-
-                        {/* Контакты и подписка */}
                         <div>
                             <h3 className="text-mauve-100 font-semibold text-lg mb-4">Stay Connected</h3>
                             <div className="space-y-2 mb-4">
@@ -131,7 +148,6 @@ export default function HeaderLayout() {
                                     egorb2302@greentechstore.com
                                 </p>
                             </div>
-                            {/* Подписка на рассылку */}
                             <div className="flex gap-2">
                                 <input 
                                     type="email" 

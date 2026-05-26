@@ -27,7 +27,7 @@ export const removeProduct = async (id: number): Promise<Product> => {
     return response.json()
 }
 
-export const fetchUsers = async (): Promise<User> => {
+export const fetchUsers = async (): Promise<User[]> => {
     const response = await fetch(`${API_USERS}`);
     if (!response.ok) throw new Error('Error of fetching all users')
     const data = await response.json();
