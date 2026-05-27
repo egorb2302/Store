@@ -15,7 +15,7 @@ export default function Cart() {
     if (items.length <= 0) {
         return (
             <div className="h-[70vh]">
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center px-10 text-center">
                     <h1 className="text-white text-6xl font-bold cursor-default mt-40 mb-20">Your Cart is Empty!</h1>
                     <Link to="/products">
                         <button className="py-3 px-10 bg-linear-to-r from-emerald-800 to-green-700 
@@ -109,8 +109,7 @@ export default function Cart() {
                         <p className="text-mauve-300 font-medium">Total:</p>
                         <p className="text-emerald-400 font-bold text-2xl">${getTotalPrice().toFixed(2)}</p>
                     </div>
-                    
-                    <div className="flex gap-3">
+                    <div className="flex flex-col items-center sm:flex-row gap-3">
                         <button 
                             className="flex-1 py-3 px-6 bg-mauve-700 border-2 border-mauve-600 
                                     text-mauve-300 font-semibold rounded-xl cursor-pointer 

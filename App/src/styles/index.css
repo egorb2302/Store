@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 
+html {
+    overflow-x: hidden;
+}
+
 body {
+    overflow-x: hidden;
     background-image: linear-gradient(to bottom, var(--color-emerald-900), var(--color-emerald-950));
 }
 

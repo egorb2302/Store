@@ -224,6 +224,10 @@
     {
       "email": "test@gmail.com",
       "id": "Yh60jHo_x_w"
+    },
+    {
+      "email": "adap@gmail.com",
+      "id": "uc7pMDOkX_s"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

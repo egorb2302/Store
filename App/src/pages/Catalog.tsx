@@ -76,45 +76,49 @@ export default function Catalog() {
 
     return (
         <div>
-            <div className="w-full bg-mauve-900 h-16 flex justify-center items-center gap-4 px-4 border-b border-mauve-700">
-                <div className="relative">
+            <div className="w-full bg-mauve-900 h-auto sm:h-16 flex flex-col sm:flex-row 
+                    justify-center items-stretch sm:items-center gap-3 sm:gap-4 
+                    px-3 sm:px-4 py-3 sm:py-0 border-b border-mauve-700">
+                <div className="relative flex-1 sm:flex-none">
                     <input 
-                        className="bg-mauve-800 border border-mauve-700 rounded-xl pl-10 pr-5 py-2 
-                                text-mauve-200 placeholder-mauve-500 font-medium
-                                focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                transition-all duration-300 w-300"
+                        className="bg-mauve-800 border border-mauve-700 rounded-xl 
+                                    pl-9 sm:pl-10 pr-4 sm:pr-5 py-2 w-full sm:w-64 md:w-80 lg:w-300
+                                    text-mauve-200 placeholder-mauve-500 text-sm sm:text-base font-medium
+                                    focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
+                                    transition-all duration-300"
                         ref={inputRef} 
                         type="text" 
                         placeholder="Search products..." 
                         onChange={(e) => updateFilter(e.target.value)}
                     />
                 </div>
-                
-                <button 
-                    className="bg-linear-to-r from-emerald-800 to-green-700 text-mauve-100 
-                            font-semibold rounded-xl py-2 px-5 cursor-pointer
-                            transition-all duration-300 hover:from-green-700 hover:to-emerald-800 
-                            hover:scale-105 active:scale-95"
-                    onClick={() => setSearchParams(getParams)}
-                >
-                    Search
-                </button>
-                
-                {getParams.title !== '' && 
+                <div className="flex gap-2 sm:gap-3">
                     <button 
-                        className="bg-mauve-700 border-2 border-mauve-600 text-mauve-300 
-                                font-semibold rounded-xl py-2 px-4 cursor-pointer
-                                hover:border-emerald-700 hover:text-emerald-400
-                                transition-all duration-300"
-                        onClick={clearFilter}
+                        className="flex-1 sm:flex-none bg-linear-to-r from-emerald-800 to-green-700 text-mauve-100 
+                                    font-semibold rounded-xl py-2 px-4 sm:px-5 cursor-pointer text-sm sm:text-base
+                                    transition-all duration-300 hover:from-green-700 hover:to-emerald-800 
+                                    hover:scale-105 active:scale-95"
+                        onClick={() => setSearchParams(getParams)}
                     >
-                        Show All
+                        Search
                     </button>
-                }
+                    
+                    {getParams.title !== '' && 
+                        <button 
+                            className="flex-1 sm:flex-none bg-mauve-700 border-2 border-mauve-600 text-mauve-300 
+                                        font-semibold rounded-xl py-2 px-3 sm:px-4 cursor-pointer text-sm sm:text-base
+                                        hover:border-emerald-700 hover:text-emerald-400
+                                        transition-all duration-300"
+                            onClick={clearFilter}
+                        >
+                            Show All
+                        </button>
+                    }
+                </div>
             </div>
             <div className="flex flex-wrap justify-center gap-8 mb-40 px-4">
-                <div className="bg-mauve-900 h-fit w-60 mt-32 rounded-xl sticky top-5 
-                                border border-mauve-700 p-5">
+                <div className="bg-mauve-900 h-fit sm:w-60 mt-10 sm:mt-32 rounded-xl sticky top-5 
+                                border border-mauve-700 p-5 w-full">
                     <h3 className="text-mauve-100 font-bold text-lg mb-4">Filters</h3>
                     <div className="space-y-3">
                         <h4 className="text-mauve-300 font-semibold text-sm uppercase tracking-wider">Category</h4>

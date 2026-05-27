@@ -188,7 +188,7 @@ export default function SignUp({ onSignUp }: { onSignUp: (data: User) => void })
                         to="/login" 
                         className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors duration-300"
                     >
-                        Sign In
+                        Login
                     </Link>
                 </p>
             </div>

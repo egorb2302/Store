@@ -77,7 +77,7 @@ export default function HeaderLayout() {
                         )}
                     </div>
                     <button className="lg:hidden p-2">
-                        <svg className="w-6 h-6 fill-mauve-300" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 fill-mauve-900" viewBox="0 0 24 24">
                             <path d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
@@ -87,20 +87,20 @@ export default function HeaderLayout() {
                 <Outlet/>
             </main>
             <footer className="bg-mauve-900 text-mauve-300">
-                <div className="container mx-auto px-6 py-12">
-                    <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-40 mb-12">
+                <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-40 mb-8 sm:mb-12 lg:grid-cols-3">
                         <div>
                             <div className="flex items-center gap-2 mb-4">
-                                <span className="text-3xl font-bold text-emerald-800">
+                                <span className="text-2xl sm:text-3xl font-bold text-emerald-800">
                                     GreenTech
                                 </span>
                             </div>
-                            <p className="text-mauve-400 text-sm leading-relaxed mb-4">
+                            <p className="text-mauve-400 text-xs sm:text-sm leading-relaxed mb-4">
                                 Sustainable technology for a better future. We make eco-friendly tech 
                                 accessible to everyone while protecting our planet.
                             </p>
                         </div>
-                        <div>
+                        <div className="hidden md:block">
                             <h3 className="text-mauve-100 font-semibold text-lg mb-4">Quick Links</h3>
                             <ul className="space-y-2">
                                 <li className="hover:text-emerald-400 transition-colors duration-300 text-sm">
@@ -126,23 +126,23 @@ export default function HeaderLayout() {
                             </ul>
                         </div>
                         <div>
-                            <h3 className="text-mauve-100 font-semibold text-lg mb-4">Stay Connected</h3>
+                            <h3 className="text-mauve-100 font-semibold text-base sm:text-lg mb-3 sm:mb-4">Stay Connected</h3>
                             <div className="space-y-2 mb-4">
-                                <p className="flex items-center gap-2 text-sm text-mauve-400">
-                                    <svg className="w-4 h-4 fill-emerald-500" viewBox="0 0 24 24">
+                                <p className="flex items-center gap-2 text-xs sm:text-sm text-mauve-400">
+                                    <svg className="w-4 h-4 fill-emerald-500 shrink-0" viewBox="0 0 24 24">
                                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
                                         <circle cx="12" cy="10" r="3"/>
                                     </svg>
                                     742 Evergreen St, Greenland, OR 00000
                                 </p>
-                                <p className="flex items-center gap-2 text-sm text-mauve-400">
-                                    <svg className="w-4 h-4 fill-emerald-500" viewBox="0 0 24 24">
+                                <p className="flex items-center gap-2 text-xs sm:text-sm text-mauve-400">
+                                    <svg className="w-4 h-4 fill-emerald-500 shrink-0" viewBox="0 0 24 24">
                                         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
                                     </svg>
                                     8 (998)-248-67-67
                                 </p>
-                                <p className="flex items-center gap-2 text-sm text-mauve-400">
-                                    <svg className="w-4 h-4 fill-emerald-500" viewBox="0 0 24 24">
+                                <p className="flex items-center gap-2 text-xs sm:text-sm text-mauve-400">
+                                    <svg className="w-4 h-4 fill-emerald-500 shrink-0" viewBox="0 0 24 24">
                                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                                         <polyline points="22,6 12,13 2,6"/>
                                     </svg>
@@ -152,25 +152,24 @@ export default function HeaderLayout() {
                             {<Subscribe />}
                         </div>
                     </div>
-                    <div className="border-t border-mauve-700 pt-8">
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <p className="text-mauve-400 text-sm">
+                    <div className="border-t border-mauve-700 pt-6 sm:pt-8">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
+                            <p className="text-mauve-400 text-xs sm:text-sm order-2 md:order-1">
                                 © 2026 GreenTech. All rights reserved.
                             </p>
-                            <div className="flex gap-6">
-                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-sm transition-colors duration-300">
+                            <div className="flex gap-3 sm:gap-6 order-1 md:order-2">
+                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-xs sm:text-sm transition-colors duration-300">
                                     Privacy Policy
                                 </a>
-                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-sm transition-colors duration-300">
+                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-xs sm:text-sm transition-colors duration-300">
                                     Terms of Service
                                 </a>
-                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-sm transition-colors duration-300">
+                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-xs sm:text-sm transition-colors duration-300">
                                     Cookie Policy
                                 </a>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </footer>
         </>
