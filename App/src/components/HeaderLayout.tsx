@@ -1,17 +1,25 @@
+import { useState } from 'react';
 import { NavLink, Outlet } from "react-router";
 import cartIcon from '../assets/shopping-cart.svg';
 import useCartStore from "../stores/store";
 import useAuthStore from "../stores/auth";
 import Subscribe from '../components/Subscribe';
+import Menu from '../assets/text-align-justify.svg';
+import DropdownMenu from '../components/Menu';
 
 export default function HeaderLayout() {
+    const [isOpen, setIsOpen] = useState<boolean>(false);
     const { getTotalItems } = useCartStore();
-    const { isAuth } = useAuthStore(); 
+    const { isAuth } = useAuthStore();
+    
+    const handleMenuClick = () => {
+        setIsOpen(!isOpen)
+    }
 
     return (
         <>
             <header className="w-full flex items-center justify-between h-20 px-6 md:px-10 lg:px-20 
-                   bg-mauve-900 border-b-2 border-emerald-800">
+                   bg-mauve-900 border-b-2 border-emerald-800 relative">
                 <div className="flex items-center gap-2">
                     <h1 className="text-3xl md:text-4xl font-bold">
                         <span className="text-emerald-400">Green</span>
@@ -76,11 +84,10 @@ export default function HeaderLayout() {
                             </NavLink>
                         )}
                     </div>
-                    <button className="lg:hidden p-2">
-                        <svg className="w-6 h-6 fill-mauve-900" viewBox="0 0 24 24">
-                            <path d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
+                    <button className="lg:hidden p-2" onClick={handleMenuClick}>
+                        <img className="w-8 filter invert sepia hue-rotate-90" src={Menu} alt="menu" />
                     </button>
+                    {<DropdownMenu state={isOpen}/>}
                 </div>
             </header>
             <main>
