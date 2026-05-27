@@ -1,186 +1,3 @@
-// let products = [
-//     {
-//       "id": "1",
-//       "name": "Ноутбук Apple MacBook Pro 14",
-//       "price": 1999,
-//       "category": "laptops",
-//       "brand": "Apple",
-//       "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300",
-//       "inStock": true,
-//       "description": "M3 Pro chip, 14-дюймовый дисплей Liquid Retina XDR, 16GB RAM, 512GB SSD",
-//       "rating": 4.8,
-//       "reviews": 125,
-//       "specs": {
-//         "processor": "Apple M3 Pro",
-//         "ram": "16GB",
-//         "storage": "512GB SSD",
-//         "display": "14.2-inch Liquid Retina XDR"
-//       }
-//     },
-//     {
-//       "id": "2",
-//       "name": "Ноутбук ASUS ROG Zephyrus G14",
-//       "price": 1499,
-//       "category": "laptops",
-//       "brand": "ASUS",
-//       "image": "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=300",
-//       "inStock": true,
-//       "description": "AMD Ryzen 9, RTX 4060, 16GB RAM, 1TB SSD",
-//       "rating": 4.7,
-//       "reviews": 89,
-//       "specs": {
-//         "processor": "AMD Ryzen 9 7940HS",
-//         "ram": "16GB DDR5",
-//         "storage": "1TB SSD",
-//         "display": "14-inch QHD+ 120Hz"
-//       }
-//     },
-//     {
-//       "id": "3",
-//       "name": "Смартфон Apple iPhone 15 Pro",
-//       "price": 1099,
-//       "category": "phones",
-//       "brand": "Apple",
-//       "image": "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=300",
-//       "inStock": true,
-//       "description": "6.1-дюймовый дисплей, A17 Pro, 256GB,钛金属 корпус",
-//       "rating": 4.9,
-//       "reviews": 342,
-//       "specs": {
-//         "display": "6.1-inch Super Retina XDR",
-//         "processor": "A17 Pro",
-//         "storage": "256GB",
-//         "camera": "48MP Main + 12MP Ultra Wide"
-//       }
-//     },
-//     {
-//       "id": "4",
-//       "name": "Смартфон Samsung Galaxy S24 Ultra",
-//       "price": 1299,
-//       "category": "phones",
-//       "brand": "Samsung",
-//       "image": "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=300",
-//       "inStock": true,
-//       "description": "6.8-дюймовый Dynamic AMOLED, S Pen, 200MP камера, 12GB RAM",
-//       "rating": 4.8,
-//       "reviews": 210,
-//       "specs": {
-//         "display": "6.8-inch Dynamic AMOLED 2X",
-//         "processor": "Snapdragon 8 Gen 3",
-//         "ram": "12GB",
-//         "storage": "256GB"
-//       }
-//     },
-//     {
-//       "id": "5",
-//       "name": "Наушники Sony WH-1000XM5",
-//       "price": 399,
-//       "category": "audio",
-//       "brand": "Sony",
-//       "image": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=300",
-//       "inStock": true,
-//       "description": "Беспроводные наушники с шумоподавлением, 30 часов работы",
-//       "rating": 4.9,
-//       "reviews": 567,
-//       "specs": {
-//         "type": "Over-ear",
-//         "battery": "30 hours",
-//         "noiseCanceling": true,
-//         "wireless": true
-//       }
-//     },
-//     {
-//       "id": "6",
-//       "name": "Клавиатура Logitech MX Mechanical",
-//       "price": 199,
-//       "category": "accessories",
-//       "brand": "Logitech",
-//       "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300",
-//       "inStock": false,
-//       "description": "Механическая клавиатура с подсветкой, Bluetooth, USB-C",
-//       "rating": 4.6,
-//       "reviews": 78,
-//       "specs": {
-//         "type": "Mechanical",
-//         "connection": "Bluetooth + USB",
-//         "backlight": true,
-//         "battery": "15 days"
-//       }
-//     },
-//     {
-//       "id": "7",
-//       "name": "Монитор LG UltraGear 27\"",
-//       "price": 449,
-//       "category": "monitors",
-//       "brand": "LG",
-//       "image": "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=300",
-//       "inStock": true,
-//       "description": "27-дюймовый QHD, 165Hz, 1ms, G-Sync Compatible",
-//       "rating": 4.7,
-//       "reviews": 145,
-//       "specs": {
-//         "size": "27-inch",
-//         "resolution": "2560 x 1440",
-//         "refreshRate": "165Hz",
-//         "responseTime": "1ms"
-//       }
-//     },
-//     {
-//       "id": "8",
-//       "name": "Мышь Logitech MX Master 3S",
-//       "price": 99,
-//       "category": "accessories",
-//       "brand": "Logitech",
-//       "image": "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=300",
-//       "inStock": true,
-//       "description": "Беспроводная мышь с бесшумными кликами, 8K DPI",
-//       "rating": 4.8,
-//       "reviews": 234,
-//       "specs": {
-//         "type": "Wireless",
-//         "dpi": "8000",
-//         "buttons": "6",
-//         "battery": "70 days"
-//       }
-//     },
-//     {
-//       "id": "9",
-//       "name": "Планшет Apple iPad Air",
-//       "price": 599,
-//       "category": "tablets",
-//       "brand": "Apple",
-//       "image": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=300",
-//       "inStock": true,
-//       "description": "10.9-дюймовый Liquid Retina, M1 чип, Apple Pencil support",
-//       "rating": 4.8,
-//       "reviews": 189,
-//       "specs": {
-//         "display": "10.9-inch Liquid Retina",
-//         "processor": "Apple M1",
-//         "storage": "64GB",
-//         "applePencil": true
-//       }
-//     },
-//     {
-//       "id": "10",
-//       "name": "Видеокарта NVIDIA RTX 4070",
-//       "price": 599,
-//       "category": "components",
-//       "brand": "NVIDIA",
-//       "image": "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=300",
-//       "inStock": false,
-//       "description": "12GB GDDR6X, DLSS 3, Ray Tracing",
-//       "rating": 4.9,
-//       "reviews": 67,
-//       "specs": {
-//         "memory": "12GB GDDR6X",
-//         "dlss": "3.0",
-//         "rayTracing": true,
-//         "ports": "HDMI 2.1, DisplayPort 1.4a"
-//       }
-//     }
-// ];
-
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -191,17 +8,18 @@ const supabase = createClient(
 export default async function handler(req, res) {
   const { method } = req;
   
-  // Правильный способ получить id из URL
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const id = url.searchParams.get('id') || url.pathname.split('/').pop();
+  // Извлекаем id из URL: /api/products/123 → id = 123
+  const urlParts = req.url.split('/');
+  const id = urlParts[urlParts.length - 1];
+  const isSingleProduct = id !== 'products' && !isNaN(Number(id));
 
   switch (method) {
     case 'GET':
-      if (id && id !== 'products') {
+      if (isSingleProduct) {
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .eq('id', id)
+          .eq('id', Number(id))
           .single()
         
         if (error) return res.status(404).json({ error: error.message })
@@ -219,7 +37,7 @@ export default async function handler(req, res) {
       const { error: deleteError } = await supabase
         .from('products')
         .delete()
-        .eq('id', id)
+        .eq('id', Number(id))
       
       if (deleteError) return res.status(500).json({ error: deleteError.message })
       return res.status(200).json({ success: true })

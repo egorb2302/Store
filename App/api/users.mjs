@@ -1,26 +1,3 @@
-// let users = [
-//   {
-//     "id": "1",
-//     "email": "user@example.com",
-//     "password": "123",
-//     "name": "John Doe"
-//   },
-//   {
-//     "name": "Pidaras Ebani",
-//     "email": "berendeevegor@gmail.com",
-//     "password": "321321",
-//     "confirmPass": "321321",
-//     "id": "5jg-klxH5HE"
-//   },
-//   {
-//     "name": "ЕгорЕгор",
-//     "email": "berendeevegor1111@gmail.com",
-//     "password": "123123",
-//     "confirmPass": "123123",
-//     "id": "coJV02ZrTtg"
-//   }
-// ];
-
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -31,21 +8,22 @@ const supabase = createClient(
 export default async function handler(req, res) {
   const { method } = req;
   
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const id = url.searchParams.get('id') || url.pathname.split('/').pop();
+  // Извлекаем id из URL: /api/users/123 → id = 123
+  const urlParts = req.url.split('/');
+  const lastPart = urlParts[urlParts.length - 1];
+  const isSingleUser = lastPart !== 'users' && lastPart.length > 0;
 
   switch (method) {
     case 'GET':
-      if (id && id !== 'users') {
+      if (isSingleUser) {
         const { data, error } = await supabase
           .from('users')
           .select('*')
-          .eq('id', id)
+          .eq('id', lastPart)
           .single()
         
         if (error) return res.status(404).json({ error: error.message })
-        const { confirmPass, ...userData } = data
-        return res.status(200).json(userData)
+        return res.status(200).json(data)
       }
       
       const { data: allUsers, error: getAllError } = await supabase
@@ -73,19 +51,23 @@ export default async function handler(req, res) {
       return res.status(201).json(createdUser)
 
     case 'DELETE':
+      if (!isSingleUser) return res.status(400).json({ error: 'User ID is required' })
+      
       const { error: deleteError } = await supabase
         .from('users')
         .delete()
-        .eq('id', id)
+        .eq('id', lastPart)
       
       if (deleteError) return res.status(500).json({ error: deleteError.message })
       return res.status(200).json({ success: true })
 
     case 'PATCH':
+      if (!isSingleUser) return res.status(400).json({ error: 'User ID is required' })
+      
       const { data: updatedUser, error: updateError } = await supabase
         .from('users')
         .update(req.body)
-        .eq('id', id)
+        .eq('id', lastPart)
         .select()
         .single()
       
