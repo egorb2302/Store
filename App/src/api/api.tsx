@@ -1,9 +1,14 @@
 import type { Product, User } from "../types/types";
 
-const API_PRODUCTS: string = 'http://localhost:3000/products'
-const API_USERS: string = 'http://localhost:3000/users'
-const API_ORDERS: string = 'http://localhost:3000/orders'
-const API_EMAIL: string = 'http://localhost:3000/emails'
+// const API_PRODUCTS: string = 'http://localhost:3000/products'
+// const API_USERS: string = 'http://localhost:3000/users'
+// const API_ORDERS: string = 'http://localhost:3000/orders'
+// const API_EMAIL: string = 'http://localhost:3000/emails'
+
+const API_PRODUCTS = '/api/products'
+const API_USERS = '/api/users'
+const API_ORDERS = '/api/orders'
+const API_EMAIL = '/api/emails'
 
 export const fetchProducts = async (): Promise<Product[]> => {
     const response = await fetch(`${API_PRODUCTS}`);
