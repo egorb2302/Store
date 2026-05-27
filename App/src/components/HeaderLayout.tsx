@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router";
 import cartIcon from '../assets/shopping-cart.svg';
 import useCartStore from "../stores/store";
 import useAuthStore from "../stores/auth";
+import Subscribe from '../components/Subscribe';
 
 export default function HeaderLayout() {
     const { getTotalItems } = useCartStore();
@@ -148,24 +149,9 @@ export default function HeaderLayout() {
                                     egorb2302@greentechstore.com
                                 </p>
                             </div>
-                            <div className="flex gap-2">
-                                <input 
-                                    type="email" 
-                                    placeholder="Your email" 
-                                    className="flex-1 px-3 py-2 bg-mauve-800 border border-mauve-700 rounded-lg 
-                                            text-mauve-200 text-sm placeholder-mauve-500
-                                            focus:outline-none focus:border-emerald-500 transition-colors duration-300"
-                                />
-                                <button className="py-2 px-4 bg-linear-to-r from-emerald-800 to-green-700 
-                                                text-mauve-200 text-sm font-semibold rounded-lg cursor-pointer 
-                                                transition-all duration-300 hover:from-green-700 hover:to-emerald-800">
-                                    Subscribe
-                                </button>
-                            </div>
+                            {<Subscribe />}
                         </div>
                     </div>
-
-                    {/* Нижняя полоса */}
                     <div className="border-t border-mauve-700 pt-8">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                             <p className="text-mauve-400 text-sm">

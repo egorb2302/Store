@@ -3,6 +3,7 @@ import type { Product, User } from "../types/types";
 const API_PRODUCTS: string = 'http://localhost:3000/products'
 const API_USERS: string = 'http://localhost:3000/users'
 const API_ORDERS: string = 'http://localhost:3000/orders'
+const API_EMAIL: string = 'http://localhost:3000/emails'
 
 export const fetchProducts = async (): Promise<Product[]> => {
     const response = await fetch(`${API_PRODUCTS}`);
@@ -89,5 +90,18 @@ export const addOrder = async (prop: Product): Promise<Product> => {
     const data = await response.json()
     return data
 } 
+
+const delay = async () => new Promise((resolve) => setTimeout(resolve, 1000))
+
+export const sendEmail = async (email: object ): Promise<object> => {
+    delay();
+    const response = await fetch(`${API_EMAIL}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(email)
+    });
+    if (!response.ok) throw new Error('Error of sending mail')
+    return response.json();
+}
 
 

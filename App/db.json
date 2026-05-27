@@ -194,8 +194,25 @@
       "password": "321321",
       "confirmPass": "321321",
       "id": "5jg-klxH5HE"
+    },
+    {
+      "name": "ЕгорЕгор",
+      "email": "berendeevegor1111@gmail.com",
+      "password": "123123",
+      "confirmPass": "123123",
+      "id": "coJV02ZrTtg"
     }
   ],
   "orders": [],
+  "emails": [
+    {
+      "email": "berendeevegor@gmail.com",
+      "id": "YmcO3jw218w"
+    },
+    {
+      "email": "pidr@gmail.com",
+      "id": "cZocN8OjA44"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
