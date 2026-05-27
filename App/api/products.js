@@ -190,11 +190,14 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   const { method } = req;
-  const { id } = req.query;
+  
+  // Правильный способ получить id из URL
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const id = url.searchParams.get('id') || url.pathname.split('/').pop();
 
   switch (method) {
     case 'GET':
-      if (id) {
+      if (id && id !== 'products') {
         const { data, error } = await supabase
           .from('products')
           .select('*')

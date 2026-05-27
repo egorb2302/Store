@@ -20,10 +20,9 @@ export default async function handler(req, res) {
   const { data: newEmail, error } = await supabase
     .from('emails')
     .insert([{
+      id: req.body.id || Date.now().toString(),
       email: req.body.email,
-      subject: req.body.subject,
-      message: req.body.message,
-      sent_at: new Date().toISOString()
+      created_at: new Date().toISOString()
     }])
     .select()
     .single()
