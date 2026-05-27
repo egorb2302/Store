@@ -4,6 +4,8 @@ import { fetchProduct } from "../api/api";
 import type { Product } from "../types/types";
 import ProductsSpecs from '../components/Specs';
 import { useState } from 'react';
+import { SuspenseFallback } from "../components/SuspenseFallback";
+import useCartStore from "../stores/store";
 
 export default function Product() {
     const { id } = useParams();
@@ -13,13 +15,19 @@ export default function Product() {
         queryFn: () => fetchProduct(numericID),
         enabled: !isNaN(numericID)
     })
-
+    const { addItem } = useCartStore();
+    const [btnState, setButtonState] = useState<boolean>(false)
     const [activeTab, setActiveTab] = useState('description');
     const [quantity, setQuantity] = useState(1);
 
-    if (isLoading) return <div>Loading...</div>
+    if (isLoading) return <SuspenseFallback/>
     if (error) throw new Error(`Error with fetching product (id:${Number(id)})`)
     if (!product) throw new Error(`Error: product with id ${Number(id)} has not found`)
+
+    const handleButtonClick = () => {
+        addItem({...product, quantity: quantity})
+        setButtonState(true)
+    }
 
     return (
         <div className="min-h-screen bg-mauve-950 py-10 px-4 md:px-10 lg:px-20">
@@ -101,7 +109,7 @@ export default function Product() {
                             </div>
 
                             <div className="flex gap-3">
-                                <button className="flex-1 py-4 bg-linear-to-r from-emerald-800 to-green-700 
+                                <button onClick={handleButtonClick} className="flex-1 py-4 bg-linear-to-r from-emerald-800 to-green-700 
                                                    text-mauve-100 font-semibold text-lg rounded-xl
                                                    hover:from-green-700 hover:to-emerald-800
                                                    transition-all duration-300 hover:scale-[1.02]
@@ -109,7 +117,7 @@ export default function Product() {
                                     <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
                                         <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
                                     </svg>
-                                    Add to Cart — ${(product.price * quantity).toFixed(2)}
+                                    {btnState === false ? `Add to Cart — ${(product.price * quantity).toFixed(2)}` : 'Added!'}
                                 </button>
                                 
                                 <button className="w-14 h-14 bg-mauve-800 border border-mauve-700 rounded-xl

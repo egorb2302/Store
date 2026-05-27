@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import useCartStore from "../stores/store";
 import type { Category, Product } from "../types/types";
 import { useState, useEffect, useRef } from "react";
+import { SuspenseFallback } from "../components/SuspenseFallback";
 
 export default function Catalog() {
     const { data: products, error, isLoading } = useQuery({
@@ -66,7 +67,7 @@ export default function Catalog() {
         addItem(p)
     }
 
-    if (isLoading) return <div>Loading...</div>
+    if (isLoading) return <SuspenseFallback/>
     if (error) throw new Error('Error of render products in catalog')
 
     return (
