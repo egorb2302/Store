@@ -37,16 +37,11 @@ export default function Catalog() {
     }
 
     const filtredProducts = products.filter(p => {
-        if (title === '' && category.length === 0 && !onlyInStock) return true
-
-        const titleSearch = p.name.toLowerCase().includes(title.toLowerCase())
-        const categoryItemSearch = category.includes(p.category);
+        const titleMatch = title === '' || p.name.toLowerCase().includes(title.toLowerCase());
+        const categoryMatch = category.length === 0 || category.includes(p.category);
+        const stockMatch = !onlyInStock || p.inStock;
         
-        if (onlyInStock && p.inStock) {
-            return true;
-        }
-
-        return titleSearch && categoryItemSearch;
+        return titleMatch && categoryMatch && stockMatch;
     })
 
     const updateFilter = (value: string) => {

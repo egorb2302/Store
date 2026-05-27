@@ -12,13 +12,13 @@ export default function SuccessModal({state, message, onClose}: ModalType) {
                 </svg>
                 <h3 className="text-mauve-100 font-bold text-xl mb-2">Success!</h3>
                 <p className="text-mauve-400 mb-4">{message}</p>
-                {/* <button 
+                <button 
                     onClick={onClose}
                     className="px-8 py-2 bg-emerald-700 text-mauve-100 
                     rounded-xl hover:bg-emerald-600 transition-colors cursor-pointer"
                 >
                     OK
-                </button> */}
+                </button>
             </div>
         </div>
     )
