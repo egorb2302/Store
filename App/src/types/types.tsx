@@ -115,3 +115,9 @@ export interface ProtectedRouteTypes {
     isAuth: boolean,
     redirectTo: string
 }
+
+export interface ModalType {
+    state: boolean,
+    message: string,
+    onClose: () => void
+}

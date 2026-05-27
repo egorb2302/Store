@@ -2,9 +2,10 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addUser } from "../api/api";
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { User } from "../types/types";
 import { useNavigate, Link } from "react-router";
+import SuccessModal from "../components/SuccesModal";
 
 
 const userSchema = z.object({
@@ -19,6 +20,7 @@ const userSchema = z.object({
 type UserFormTypes = z.infer<typeof userSchema>
 
 export default function SignUp({ onSignUp }: { onSignUp: (data: User) => void }) {
+    const [modalState, setModalState] = useState<boolean>(false);
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<UserFormTypes>({
         resolver: zodResolver(userSchema)
     });
@@ -33,6 +35,9 @@ export default function SignUp({ onSignUp }: { onSignUp: (data: User) => void })
         nav('/login')
     }
 
+    const handleCloseModal = () => {
+        setModalState(true)
+    }
 
     return (
         <div className="min-h-screen bg-mauve-950 flex items-center justify-center py-12 px-4">
@@ -187,6 +192,7 @@ export default function SignUp({ onSignUp }: { onSignUp: (data: User) => void })
                     </Link>
                 </p>
             </div>
+            {<SuccessModal state={modalState} message="Registration is successful!" onClose={handleCloseModal}/>}
         </div>
     )
 }
