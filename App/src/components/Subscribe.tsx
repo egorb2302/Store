@@ -1,12 +1,12 @@
 import { useForm } from "react-hook-form";
-import z, { string } from "zod";
+import z from "zod";
 import { sendEmail } from "../api/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SuccessModal from "./SuccesModal";
 import { useState } from "react";
 
 const subscribeSchema = z.object({
-    email: string().email().optional()
+    email: z.string().email().optional()
 })
 
 type SubscribeMailType = z.infer<typeof subscribeSchema>
@@ -27,7 +27,7 @@ export default function Subscribe() {
     }
 
     const handleCloseModal = () => {
-        setModalState(true)
+        setModalState(false)
     }
 
     return (
@@ -48,7 +48,7 @@ export default function Subscribe() {
                     </button>
                 </div>
             </form>
-            {<SuccessModal state={modalState} message={'Mail sending is succesful!'} onClose={handleCloseModal} />}
+            {modalState && <SuccessModal state={modalState} message={'Mail sending is succesful!'} onClose={handleCloseModal} />}
         </>
     )
 }
