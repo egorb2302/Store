@@ -48,7 +48,7 @@ export default function Subscribe() {
                     </button>
                 </div>
             </form>
-            {<SuccessModal state={modalState} message={'Mail sending is succesful!'} onClose={() => handleCloseModal()} />}
+            {<SuccessModal state={modalState} message={'Mail sending is succesful!'} onClose={handleCloseModal} />}
         </>
     )
 }
