@@ -137,77 +137,78 @@ export default function Product() {
                     <div className="flex border-b border-mauve-700 mb-8">
                         <button 
                             onClick={() => setActiveTab('description')}
-                            className={`px-6 py-3 font-semibold text-lg transition-all duration-300 border-b-2 
-                                      ${activeTab === 'description' 
-                                          ? 'border-emerald-500 text-emerald-400' 
-                                          : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
+                            className={`px-4 sm:px-6 py-3 font-semibold text-base sm:text-lg transition-all duration-300 border-b-2 
+                                    ${activeTab === 'description' 
+                                        ? 'border-emerald-500 text-emerald-400' 
+                                        : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
                         >
                             Description
                         </button>
                         <button 
                             onClick={() => setActiveTab('specs')}
-                            className={`px-6 py-3 font-semibold text-lg transition-all duration-300 border-b-2 
-                                      ${activeTab === 'specs' 
-                                          ? 'border-emerald-500 text-emerald-400' 
-                                          : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
+                            className={`px-4 sm:px-6 py-3 font-semibold text-base sm:text-lg transition-all duration-300 border-b-2 
+                                    ${activeTab === 'specs' 
+                                        ? 'border-emerald-500 text-emerald-400' 
+                                        : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
                         >
-                            Specifications
+                            Specs
                         </button>
                         <button 
                             onClick={() => setActiveTab('reviews')}
-                            className={`px-6 py-3 font-semibold text-lg transition-all duration-300 border-b-2 
-                                      ${activeTab === 'reviews' 
-                                          ? 'border-emerald-500 text-emerald-400' 
-                                          : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
+                            className={`hidden sm:block px-6 py-3 font-semibold text-lg transition-all duration-300 border-b-2 
+                                    ${activeTab === 'reviews' 
+                                        ? 'border-emerald-500 text-emerald-400' 
+                                        : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
                         >
                             Reviews ({product.reviews})
                         </button>
                     </div>
+                    
                     {activeTab === 'description' && (
-                        <div className="bg-mauve-800 rounded-xl p-6 border border-mauve-700">
-                            <h2 className="text-mauve-100 font-bold text-2xl mb-4">Product Description</h2>
-                            <p className="text-mauve-300 leading-relaxed">{product.description}</p>
-                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-mauve-800 rounded-xl p-4 sm:p-6 border border-mauve-700">
+                            <h2 className="text-mauve-100 font-bold text-xl sm:text-2xl mb-4">Product Description</h2>
+                            <p className="text-mauve-300 leading-relaxed text-sm sm:text-base">{product.description}</p>
+                            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div className="flex items-start gap-3">
                                     <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
                                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
-                                    <span className="text-mauve-300">Made from 100% recycled materials</span>
+                                    <span className="text-mauve-300 text-sm sm:text-base">Made from 100% recycled materials</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
                                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
-                                    <span className="text-mauve-300">Energy-efficient design</span>
+                                    <span className="text-mauve-300 text-sm sm:text-base">Energy-efficient design</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
                                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
-                                    <span className="text-mauve-300">Biodegradable packaging</span>
+                                    <span className="text-mauve-300 text-sm sm:text-base">Biodegradable packaging</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
                                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
-                                    <span className="text-mauve-300">Repairable and upgradeable</span>
+                                    <span className="text-mauve-300 text-sm sm:text-base">Repairable and upgradeable</span>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'specs' && (
-                        <div className="bg-mauve-800 rounded-xl p-6 border border-mauve-700">
-                            <h2 className="text-mauve-100 font-bold text-2xl mb-6">Technical Specifications</h2>
+                        <div className="bg-mauve-800 rounded-xl p-4 sm:p-6 border border-mauve-700">
+                            <h2 className="text-mauve-100 font-bold text-xl sm:text-2xl mb-6">Technical Specifications</h2>
                             <ProductsSpecs product={product} />
                         </div>
                     )}
 
                     {activeTab === 'reviews' && (
-                        <div className="bg-mauve-800 rounded-xl p-6 border border-mauve-700">
-                            <div className="flex items-center justify-between mb-6">
+                        <div className="bg-mauve-800 rounded-xl p-4 sm:p-6 border border-mauve-700">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                                 <div>
-                                    <h2 className="text-mauve-100 font-bold text-2xl mb-2">Customer Reviews</h2>
+                                    <h2 className="text-mauve-100 font-bold text-xl sm:text-2xl mb-2">Customer Reviews</h2>
                                     <div className="flex items-center gap-3">
                                         <div className="flex items-center gap-1">
                                             {[...Array(5)].map((_, i) => (
@@ -216,19 +217,19 @@ export default function Product() {
                                                 </svg>
                                             ))}
                                         </div>
-                                        <span className="text-mauve-100 font-bold text-3xl">{product.rating}</span>
-                                        <span className="text-mauve-400">based on {product.reviews} reviews</span>
+                                        <span className="text-mauve-100 font-bold text-2xl sm:text-3xl">{product.rating}</span>
+                                        <span className="text-mauve-400 text-sm sm:text-base">based on {product.reviews} reviews</span>
                                     </div>
                                 </div>
-                                <button className="px-6 py-3 bg-linear-to-r from-emerald-800 to-green-700 
-                                                   text-mauve-100 font-semibold rounded-xl
-                                                   hover:from-green-700 hover:to-emerald-800
-                                                   transition-all duration-300">
+                                <button className="w-full sm:w-auto px-6 py-3 bg-linear-to-r from-emerald-800 to-green-700 
+                                                text-mauve-100 font-semibold rounded-xl
+                                                hover:from-green-700 hover:to-emerald-800
+                                                transition-all duration-300">
                                     Write a Review
                                 </button>
                             </div>
                             <div className="border-t border-mauve-700 pt-6">
-                                <div className="flex items-start gap-4 mb-4">
+                                <div className="flex items-start gap-3 sm:gap-4 mb-4">
                                     <div className="w-10 h-10 bg-emerald-800 rounded-full flex items-center justify-center shrink-0">
                                         <span className="text-mauve-100 font-bold">JD</span>
                                     </div>
@@ -246,7 +247,7 @@ export default function Product() {
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-mauve-300 ml-14">
+                                <p className="text-mauve-300 text-sm sm:text-base sm:ml-14">
                                     Amazing eco-friendly product! The quality is outstanding and I love that it's made from recycled materials. 
                                     Highly recommend for anyone looking to reduce their carbon footprint.
                                 </p>
