@@ -1,38 +1,29 @@
-import { useLocation, Link } from "react-router";
+import { Link, useLocation } from 'react-router';
+import { buttonVariants } from '../components/ui/button-variants';
+import { cn } from '../lib/utils';
 
 export default function NotFound() {
-    const path = useLocation();
+    const { pathname } = useLocation();
 
     return (
-        <div className="min-h-screen bg-mauve-950 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6">
-            <div className="text-center max-w-lg">
-                <h1 className="text-mauve-100 font-bold text-6xl sm:text-7xl md:text-8xl lg:text-9xl mb-3 sm:mb-4">
-                    4<span className="text-emerald-400">0</span>4
-                </h1>
-                <h3 className="text-mauve-300 text-base sm:text-lg md:text-2xl mb-2">
-                    Page Not Found
-                </h3>
-                <p className="text-mauve-400 text-sm sm:text-base mb-2 px-2">
-                    The page you're looking for doesn't exist or has been moved.
-                </p>
-                <p className="text-mauve-500 text-xs sm:text-sm mb-6 sm:mb-8 break-all px-2">
-                    URL: <span className="text-mauve-600">{path.pathname}</span>
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
-                    <Link to="/home" className="w-full sm:w-auto">
-                        <button className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 
-                                        bg-linear-to-r from-emerald-800 to-green-700 
-                                        text-mauve-100 font-semibold text-base sm:text-lg 
-                                        rounded-xl cursor-pointer 
-                                        transition-all duration-300 ease-in-out
-                                        hover:from-green-700 hover:to-emerald-800 
-                                        hover:scale-105 active:scale-95
-                                        flex items-center justify-center gap-2">
-                            Back to Home
-                        </button>
-                    </Link>
-                </div>
+        <div className="wrap flex min-h-[70vh] flex-col items-center justify-center py-20 text-center">
+            <p className="eyebrow text-bark">Error 404</p>
+            <h1 className="mt-5 text-[clamp(3rem,12vw,7rem)] font-extrabold leading-none text-pine">
+                Page not found
+            </h1>
+            <p className="mt-6 max-w-md text-lg text-bark">
+                Nothing lives at this address. It may have moved, or the link may be missing a piece
+            </p>
+            <p className="mt-4 max-w-full break-all font-mono text-xs text-bark-soft">{pathname}</p>
+
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                <Link to="/home" className={buttonVariants({ size: 'lg' })}>
+                    Back to home
+                </Link>
+                <Link to="/products" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }))}>
+                    Browse the catalog
+                </Link>
             </div>
         </div>
-    )
+    );
 }

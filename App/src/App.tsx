@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 import type { User } from "./types/types";
 import { useEffect, lazy, Suspense } from 'react';
 
@@ -17,6 +17,20 @@ import useAuthStore from "./stores/auth";
 import SignUp from "./pages/SignUp";
 import { SuspenseFallback } from "./components/SuspenseFallback";
 
+/**
+ * Новая страница открывается сверху. Без этого переход из низа каталога в
+ * карточку товара оставлял человека где-то посреди описания.
+ */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname]);
+
+  return null;
+}
+
 export default function App() {
   const { isAuth, checkAuth, logout, setUser } = useAuthStore();
 
@@ -34,6 +48,7 @@ export default function App() {
 
   return (
     <Suspense fallback={<SuspenseFallback/>}>
+      <ScrollToTop/>
       <Routes>
         <Route path="/" element={<HeaderLayout/>}>
 

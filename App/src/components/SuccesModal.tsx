@@ -1,25 +1,50 @@
-import type { ModalType } from "../types/types";
+import { Check } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import type { ModalType } from '../types/types';
+import { Button } from './ui/button';
 
-export default function SuccessModal({state, message, onClose}: ModalType) {
-    if (state === false) return null
-    console.log(`${onClose}`)
+export default function SuccessModal({ state, message, onClose }: ModalType) {
+    const okRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        if (!state) return;
+
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+        };
+
+        document.addEventListener('keydown', onKey);
+        okRef.current?.focus();
+        return () => document.removeEventListener('keydown', onKey);
+    }, [state, onClose]);
+
+    if (!state) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-mauve-900 rounded-2xl border border-emerald-700 p-8 text-center">
-                <svg className="w-16 h-16 fill-emerald-400 mx-auto mb-4" viewBox="0 0 24 24">
-                    <path d="M5 13l4 4L19 7"/>
-                </svg>
-                <h3 className="text-mauve-100 font-bold text-xl mb-2">Success!</h3>
-                <p className="text-mauve-400 mb-4">{message}</p>
-                <button 
-                    onClick={onClose}
-                    className="px-8 py-2 bg-emerald-700 text-mauve-100 
-                    rounded-xl hover:bg-emerald-600 transition-colors cursor-pointer"
-                >
-                    OK
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <button
+                type="button"
+                className="absolute inset-0 h-full w-full cursor-default bg-pine/70"
+                onClick={onClose}
+                aria-label="Close"
+            />
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="success-title"
+                className="relative w-full max-w-sm rounded-card border border-fibre bg-paper p-8 text-center shadow-band"
+            >
+                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sprout">
+                    <Check className="h-7 w-7 text-pine" aria-hidden />
+                </span>
+                <h2 id="success-title" className="mt-5 text-2xl font-bold text-pine">
+                    Done
+                </h2>
+                <p className="mt-2 text-bark">{message}</p>
+                <Button ref={okRef} onClick={onClose} className="mt-6 w-full">
+                    Close
+                </Button>
             </div>
         </div>
-    )
+    );
 }

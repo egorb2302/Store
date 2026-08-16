@@ -1,272 +1,306 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router";
-import { fetchProduct } from "../api/api";
-import type { Product } from "../types/types";
-import ProductsSpecs from '../components/Specs';
+import { useQuery } from '@tanstack/react-query';
+import { Check, ChevronRight, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
 import { useState } from 'react';
-import { SuspenseFallback } from "../components/SuspenseFallback";
-import useCartStore from "../stores/store";
+import { Link, useParams } from 'react-router';
+import { fetchProduct, fetchProducts } from '../api/api';
+import { EcoAxis, EcoBreakdown, EcoScale, EcoStamp } from '../components/EcoLabel';
+import ProductCard from '../components/ProductCard';
+import ProductSpecs from '../components/Specs';
+import { SuspenseFallback } from '../components/SuspenseFallback';
+import { Button } from '../components/ui/button';
+import { buttonVariants } from '../components/ui/button-variants';
+import { Badge } from '../components/ui/badge';
+import { CATEGORY_LABEL } from '../lib/categories';
+import { CLASS_CAPTION, ecoRating } from '../lib/eco';
+import { cn, formatPrice } from '../lib/utils';
+import useCartStore from '../stores/store';
+
+const TABS = [
+    { key: 'description', label: 'Description' },
+    { key: 'specs', label: 'Specs' },
+    { key: 'reviews', label: 'Reviews' },
+] as const;
+
+type TabKey = (typeof TABS)[number]['key'];
 
 export default function Product() {
     const { id } = useParams();
     const numericID = Number(id);
+    const valid = Number.isFinite(numericID) && numericID > 0;
+
     const { data: product, error, isLoading } = useQuery({
         queryKey: ['products', numericID],
         queryFn: () => fetchProduct(numericID),
-        enabled: !isNaN(numericID)
-    })
-    const { addItem } = useCartStore();
-    const [btnState, setButtonState] = useState<boolean>(false)
-    const [activeTab, setActiveTab] = useState('description');
+        enabled: valid,
+    });
+    const { data: allProducts } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
+
+    const { addItem, items } = useCartStore();
+    const [activeTab, setActiveTab] = useState<TabKey>('description');
     const [quantity, setQuantity] = useState(1);
 
-    if (isLoading) return <SuspenseFallback/>
-    if (error) throw new Error(`Error with fetching product (id:${Number(id)})`)
-    if (!product) throw new Error(`Error: product with id ${Number(id)} has not found`)
+    if (!valid || error) return <ProductMissing id={id} />;
+    if (isLoading || !product) return <SuspenseFallback />;
 
-    const handleButtonClick = () => {
-        addItem({...product, quantity: quantity})
-        setButtonState(true)
-    }
+    const rating = ecoRating(product);
+    const inCart = items.find((item) => item.id === product.id);
+    const related = (allProducts ?? [])
+        .filter((item) => item.category === product.category && item.id !== product.id)
+        .slice(0, 4);
 
     return (
-        <div className="min-h-screen bg-mauve-950 py-10 px-4 md:px-10 lg:px-20">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex items-center gap-2 text-sm mb-8 text-mauve-500">
-                    <a href="/" className="hover:text-emerald-400 transition-colors duration-300">Home</a>
-                    <span>/</span>
-                    <a href="/products" className="hover:text-emerald-400 transition-colors duration-300">Catalog</a>
-                    <span>/</span>
-                    <span className="text-mauve-300">{product.name}</span>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
-                    <div className="space-y-4">
-                        <div className="bg-mauve-800 rounded-2xl overflow-hidden border border-mauve-700">
-                            <img 
-                                className="w-full h-96 object-cover" 
-                                src={product.image} 
-                                alt={product.name} 
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-6">
-                        <div>
-                            <p className="text-emerald-400 font-medium text-sm mb-2">{product.brand}</p>
-                            <h1 className="text-mauve-100 font-bold text-3xl md:text-4xl mb-4">{product.name}</h1>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="flex items-center gap-1">
-                                    {[...Array(5)].map((_, i) => (
-                                        <svg 
-                                            key={i}
-                                            className={`w-5 h-5 ${i < Math.floor(product.rating) ? 'fill-yellow-400' : 'fill-mauve-600'}`} 
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                    ))}
-                                </div>
-                                <span className="text-mauve-300 font-medium">{product.rating}</span>
-                                <span className="text-mauve-500">({product.reviews} reviews)</span>
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-3">
-                            <span className="text-emerald-400 font-bold text-4xl">${product.price}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${product.inStock ? 'bg-emerald-500' : 'bg-yellow-500'}`}></div>
-                            <span className={`font-medium ${product.inStock ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                                {product.inStock ? 'In Stock' : 'Pre-order ( Ships in 2-3 weeks )'}
-                            </span>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <span className="text-mauve-300 font-medium">Quantity:</span>
-                                <div className="flex items-center gap-1 bg-mauve-800 rounded-lg border border-mauve-700">
-                                    <button 
-                                        className="w-10 h-10 flex items-center justify-center 
-                                                   text-mauve-300 hover:text-emerald-400 hover:bg-mauve-700
-                                                   rounded-l-lg transition-all duration-300
-                                                   disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                        disabled={quantity <= 1}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"/>
-                                        </svg>
-                                    </button>
-                                    <span className="w-12 text-center text-mauve-100 font-semibold">{quantity}</span>
-                                    <button 
-                                        className="w-10 h-10 flex items-center justify-center 
-                                                   text-mauve-300 hover:text-emerald-400 hover:bg-mauve-700
-                                                   rounded-r-lg transition-all duration-300"
-                                        onClick={() => setQuantity(q => q + 1)}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
+        <div className="wrap py-10 sm:py-14">
+            <nav aria-label="Breadcrumb">
+                <ol className="flex flex-wrap items-center gap-1 font-mono text-xs text-bark-soft">
+                    <li>
+                        <Link to="/home" className="hover:text-moss">
+                            Home
+                        </Link>
+                    </li>
+                    <ChevronRight className="h-3 w-3" aria-hidden />
+                    <li>
+                        <Link to={`/products?category=${product.category}`} className="hover:text-moss">
+                            {CATEGORY_LABEL[product.category] ?? product.category}
+                        </Link>
+                    </li>
+                    <ChevronRight className="h-3 w-3" aria-hidden />
+                    <li className="text-bark" aria-current="page">
+                        {product.name}
+                    </li>
+                </ol>
+            </nav>
 
-                            <div className="flex gap-3">
-                                <button onClick={handleButtonClick} className="flex-1 py-4 bg-linear-to-r from-emerald-800 to-green-700 
-                                                   text-mauve-100 font-semibold text-lg rounded-xl
-                                                   hover:from-green-700 hover:to-emerald-800
-                                                   transition-all duration-300 hover:scale-[1.02]
-                                                   flex items-center justify-center gap-2">
-                                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                                        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-                                    </svg>
-                                    {btnState === false ? `Add to Cart — ${(product.price * quantity).toFixed(2)}` : 'Added!'}
-                                </button>
-                                
-                                <button className="w-14 h-14 bg-mauve-800 border border-mauve-700 rounded-xl
-                                                   flex items-center justify-center
-                                                   hover:border-emerald-700 hover:text-emerald-400
-                                                   transition-all duration-300">
-                                    <svg className="w-6 h-6 fill-none stroke-current" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+            <div className="mt-8 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+                {/* ------------------------------ Снимок ------------------------------ */}
+                <div className="overflow-hidden rounded-card border border-fibre bg-pulp">
+                    <img
+                        className="aspect-[4/3] w-full object-cover"
+                        src={product.image}
+                        alt={product.name}
+                        decoding="async"
+                    />
                 </div>
-                <div className="mb-16">
-                    <div className="flex border-b border-mauve-700 mb-8">
-                        <button 
-                            onClick={() => setActiveTab('description')}
-                            className={`px-4 sm:px-6 py-3 font-semibold text-base sm:text-lg transition-all duration-300 border-b-2 
-                                    ${activeTab === 'description' 
-                                        ? 'border-emerald-500 text-emerald-400' 
-                                        : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
-                        >
-                            Description
-                        </button>
-                        <button 
-                            onClick={() => setActiveTab('specs')}
-                            className={`px-4 sm:px-6 py-3 font-semibold text-base sm:text-lg transition-all duration-300 border-b-2 
-                                    ${activeTab === 'specs' 
-                                        ? 'border-emerald-500 text-emerald-400' 
-                                        : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
-                        >
-                            Specs
-                        </button>
-                        <button 
-                            onClick={() => setActiveTab('reviews')}
-                            className={`hidden sm:block px-6 py-3 font-semibold text-lg transition-all duration-300 border-b-2 
-                                    ${activeTab === 'reviews' 
-                                        ? 'border-emerald-500 text-emerald-400' 
-                                        : 'border-transparent text-mauve-400 hover:text-mauve-300'}`}
-                        >
-                            Reviews ({product.reviews})
-                        </button>
+
+                {/* ---------------------------- Покупка ---------------------------- */}
+                <div>
+                    <p className="eyebrow text-moss">{product.brand}</p>
+                    <h1 className="mt-3 text-4xl font-extrabold text-pine sm:text-5xl">{product.name}</h1>
+
+                    <div className="mt-4 flex flex-wrap items-center gap-4">
+                        <span className="flex items-center gap-1.5 font-mono text-sm text-bark">
+                            <Star className="h-4 w-4 fill-moss text-moss" aria-hidden />
+                            {product.rating}
+                            <span className="sr-only">out of 5,</span>
+                            <span className="text-bark-soft">({product.reviews} reviews)</span>
+                        </span>
+                        {product.inStock ? (
+                            <Badge variant="stock">Ships today</Badge>
+                        ) : (
+                            <Badge variant="preorder">Pre-order · ships in 2 to 3 weeks</Badge>
+                        )}
                     </div>
-                    
-                    {activeTab === 'description' && (
-                        <div className="bg-mauve-800 rounded-xl p-4 sm:p-6 border border-mauve-700">
-                            <h2 className="text-mauve-100 font-bold text-xl sm:text-2xl mb-4">Product Description</h2>
-                            <p className="text-mauve-300 leading-relaxed text-sm sm:text-base">{product.description}</p>
-                            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                <div className="flex items-start gap-3">
-                                    <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
-                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    <span className="text-mauve-300 text-sm sm:text-base">Made from 100% recycled materials</span>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
-                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    <span className="text-mauve-300 text-sm sm:text-base">Energy-efficient design</span>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
-                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    <span className="text-mauve-300 text-sm sm:text-base">Biodegradable packaging</span>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <svg className="w-5 h-5 fill-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24">
-                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    <span className="text-mauve-300 text-sm sm:text-base">Repairable and upgradeable</span>
-                                </div>
-                            </div>
+
+                    <p className="mt-7 font-mono text-4xl font-medium text-pine">
+                        {formatPrice(product.price)}
+                    </p>
+
+                    <div className="mt-7 flex flex-wrap items-center gap-3">
+                        <div className="flex items-center rounded-full border border-fibre bg-pulp">
+                            <button
+                                type="button"
+                                className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full text-pine transition-colors duration-200 hover:text-moss disabled:opacity-40 disabled:hover:text-pine"
+                                onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                                disabled={quantity <= 1}
+                                aria-label="Decrease quantity"
+                            >
+                                <Minus className="h-4 w-4" aria-hidden />
+                            </button>
+                            <span
+                                className="w-10 text-center font-mono text-lg text-pine"
+                                aria-live="polite"
+                                aria-label={`Quantity ${quantity}`}
+                            >
+                                {quantity}
+                            </span>
+                            <button
+                                type="button"
+                                className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full text-pine transition-colors duration-200 hover:text-moss"
+                                onClick={() => setQuantity((value) => Math.min(99, value + 1))}
+                                aria-label="Increase quantity"
+                            >
+                                <Plus className="h-4 w-4" aria-hidden />
+                            </button>
                         </div>
+
+                        <Button
+                            variant="moss"
+                            size="lg"
+                            className="flex-1 min-w-52"
+                            onClick={() => addItem(product, quantity)}
+                        >
+                            <ShoppingBag className="h-5 w-5" aria-hidden />
+                            Add to cart · {formatPrice(product.price * quantity)}
+                        </Button>
+                    </div>
+
+                    {inCart && (
+                        <p className="mt-4 flex items-center gap-2 text-sm text-bark">
+                            <Check className="h-4 w-4 text-moss" aria-hidden />
+                            {inCart.quantity} in your cart{' · '}
+                            <Link to="/cart" className="font-medium text-moss underline underline-offset-4">
+                                Go to cart
+                            </Link>
+                        </p>
+                    )}
+
+                    {/* --------------------- Индекс: подписной блок --------------------- */}
+                    <section className="crop-marks tex-pulp relative mt-9 rounded-card border border-fibre bg-pulp p-6">
+                        <div className="flex items-start justify-between gap-6">
+                            <div>
+                                <h2 className="eyebrow text-bark">GreenTech Index</h2>
+                                <p className="mt-2 max-w-xs text-[0.9375rem] text-pine">
+                                    {CLASS_CAPTION[rating.grade]}
+                                </p>
+                            </div>
+                            <EcoStamp rating={rating} className="h-20 w-20 shrink-0" />
+                        </div>
+                        <EcoScale rating={rating} className="mt-6" />
+                        <EcoAxis rating={rating} className="mt-5" />
+                        <p className="mt-6 border-t border-fibre pt-4 text-sm text-bark">
+                            Buying this refurbished instead of new keeps about{' '}
+                            <span className="font-mono text-pine">{rating.co2Saved} kg</span> of CO₂e out of the
+                            air
+                        </p>
+                    </section>
+                </div>
+            </div>
+
+            {/* ------------------------------ Вкладки ------------------------------ */}
+            <div className="mt-16">
+                <div className="flex gap-1 border-b border-fibre" role="tablist" aria-label="Product details">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab.key}
+                            role="tab"
+                            id={`tab-${tab.key}`}
+                            aria-selected={activeTab === tab.key}
+                            aria-controls={`panel-${tab.key}`}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={cn(
+                                'cursor-pointer border-b-2 px-5 py-4 font-medium transition-colors duration-200',
+                                activeTab === tab.key
+                                    ? 'border-moss text-pine'
+                                    : 'border-transparent text-bark hover:text-pine',
+                            )}
+                        >
+                            {tab.label}
+                            {tab.key === 'reviews' && (
+                                <span className="ml-2 font-mono text-xs text-bark-soft">{product.reviews}</span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                <div
+                    role="tabpanel"
+                    id={`panel-${activeTab}`}
+                    aria-labelledby={`tab-${activeTab}`}
+                    // key заставляет панель перемонтироваться при смене вкладки,
+                    // иначе анимация проигрывается только один раз.
+                    key={activeTab}
+                    className="grid animate-fade-in gap-10 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16"
+                >
+                    {activeTab === 'description' && (
+                        <>
+                            <div>
+                                <p className="text-lg leading-relaxed text-pine">{product.description}</p>
+                            </div>
+                            <EcoBreakdown rating={rating} className="h-fit" />
+                        </>
                     )}
 
                     {activeTab === 'specs' && (
-                        <div className="bg-mauve-800 rounded-xl p-4 sm:p-6 border border-mauve-700">
-                            <h2 className="text-mauve-100 font-bold text-xl sm:text-2xl mb-6">Technical Specifications</h2>
-                            <ProductsSpecs product={product} />
-                        </div>
+                        <>
+                            <ProductSpecs product={product} />
+                            <EcoBreakdown rating={rating} className="h-fit" />
+                        </>
                     )}
 
                     {activeTab === 'reviews' && (
-                        <div className="bg-mauve-800 rounded-xl p-4 sm:p-6 border border-mauve-700">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                        <div className="lg:col-span-2">
+                            <div className="flex flex-wrap items-center gap-6 rounded-card border border-fibre bg-pulp p-6">
+                                <p className="font-display text-5xl font-extrabold text-pine">{product.rating}</p>
                                 <div>
-                                    <h2 className="text-mauve-100 font-bold text-xl sm:text-2xl mb-2">Customer Reviews</h2>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-1">
-                                            {[...Array(5)].map((_, i) => (
-                                                <svg key={i} className="w-5 h-5 fill-yellow-400" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                </svg>
-                                            ))}
-                                        </div>
-                                        <span className="text-mauve-100 font-bold text-2xl sm:text-3xl">{product.rating}</span>
-                                        <span className="text-mauve-400 text-sm sm:text-base">based on {product.reviews} reviews</span>
+                                    <div className="flex gap-0.5" aria-hidden>
+                                        {[0, 1, 2, 3, 4].map((index) => (
+                                            <Star
+                                                key={index}
+                                                className={cn(
+                                                    'h-4 w-4',
+                                                    index < Math.round(product.rating)
+                                                        ? 'fill-moss text-moss'
+                                                        : 'text-fibre',
+                                                )}
+                                            />
+                                        ))}
                                     </div>
+                                    <p className="mt-1 text-sm text-bark">
+                                        Average of {product.reviews} verified purchases
+                                    </p>
                                 </div>
-                                <button className="w-full sm:w-auto px-6 py-3 bg-linear-to-r from-emerald-800 to-green-700 
-                                                text-mauve-100 font-semibold rounded-xl
-                                                hover:from-green-700 hover:to-emerald-800
-                                                transition-all duration-300">
-                                    Write a Review
-                                </button>
                             </div>
-                            <div className="border-t border-mauve-700 pt-6">
-                                <div className="flex items-start gap-3 sm:gap-4 mb-4">
-                                    <div className="w-10 h-10 bg-emerald-800 rounded-full flex items-center justify-center shrink-0">
-                                        <span className="text-mauve-100 font-bold">JD</span>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-mauve-100 font-semibold">John Doe</h4>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <div className="flex gap-0.5">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <svg key={i} className="w-3 h-3 fill-yellow-400" viewBox="0 0 20 20">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                                    </svg>
-                                                ))}
-                                            </div>
-                                            <span className="text-mauve-500 text-sm">2 weeks ago</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p className="text-mauve-300 text-sm sm:text-base sm:ml-14">
-                                    Amazing eco-friendly product! The quality is outstanding and I love that it's made from recycled materials. 
-                                    Highly recommend for anyone looking to reduce their carbon footprint.
-                                </p>
-                            </div>
+                            <p className="mt-8 max-w-xl text-bark">
+                                Individual reviews are not published yet. The rating above is the average score
+                                left by people who bought this device from us
+                            </p>
                         </div>
                     )}
                 </div>
-                <div className="border-t border-mauve-700 pt-16">
-                    <h2 className="text-mauve-100 font-bold text-3xl mb-8">You May Also Like</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {[1, 2, 3, 4].map((item) => (
-                            <div key={item} className="bg-mauve-800 rounded-xl h-64 border border-mauve-700 
-                                                      animate-pulse flex items-center justify-center">
-                                <span className="text-mauve-500">Similar Product</span>
-                            </div>
+            </div>
+
+            {/* ------------------------------ Похожее ------------------------------ */}
+            {related.length > 0 && (
+                <section className="mt-8 border-t border-fibre pt-14">
+                    <div className="flex flex-wrap items-end justify-between gap-4">
+                        <h2 className="text-3xl font-bold text-pine">
+                            More {CATEGORY_LABEL[product.category]?.toLowerCase() ?? product.category}
+                        </h2>
+                        <Link
+                            to={`/products?category=${product.category}`}
+                            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                        >
+                            See all
+                        </Link>
+                    </div>
+                    <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                        {related.map((item) => (
+                            <ProductCard key={item.id} product={item} />
                         ))}
                     </div>
-                </div>
-            </div>
+                </section>
+            )}
         </div>
-    )
+    );
+}
+
+/**
+ * Раньше здесь стоял throw прямо в рендере. Границы ошибок в приложении нет,
+ * поэтому опечатка в адресе роняла весь React в белый экран вместо страницы.
+ */
+function ProductMissing({ id }: { id?: string }) {
+    return (
+        <div className="wrap flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
+            <p className="eyebrow text-bark">No such product</p>
+            <h1 className="mt-4 max-w-xl text-4xl font-extrabold text-pine sm:text-5xl">
+                We could not find that device
+            </h1>
+            <p className="mt-4 max-w-md text-bark">
+                {id ? `Nothing in the catalog has the id ${id}` : 'That link is missing a product id'}. It may
+                have sold out and been taken off the shelf
+            </p>
+            <Link to="/products" className={cn(buttonVariants({ size: 'lg' }), 'mt-8')}>
+                Back to the catalog
+            </Link>
+        </div>
+    );
 }

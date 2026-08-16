@@ -1,198 +1,130 @@
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { addUser } from "../api/api";
-import { useId, useState } from "react";
-import type { User } from "../types/types";
-import { useNavigate, Link } from "react-router";
-import SuccessModal from "../components/SuccesModal";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router';
+import { z } from 'zod';
+import AuthLayout from '../components/AuthLayout';
+import { Button } from '../components/ui/button';
+import { Field, Input } from '../components/ui/field';
+import { addUser } from '../api/api';
+import type { User } from '../types/types';
 
+// Список требований под полем раньше обещал восемь символов, заглавную и
+// цифру, а схема пропускала любые пять. Здесь одно правило и одна подпись.
+const signUpSchema = z
+    .object({
+        name: z.string().min(2, 'At least two characters'),
+        email: z.string().min(1, 'Enter your email').email('That does not look like an email'),
+        password: z.string().min(5, 'At least five characters'),
+        confirmPass: z.string().min(1, 'Repeat the password'),
+    })
+    .refine((data) => data.password === data.confirmPass, {
+        message: 'The two passwords do not match',
+        path: ['confirmPass'],
+    });
 
-const userSchema = z.object({
-    name: z.string().min(2, '2 is min length of name'),
-    email: z.string().email('Uncorrect email format'),
-    password: z.string().min(5, '5 is minimum length of name'),
-    confirmPass: z.string()
-}).refine(data => data.password === data.confirmPass, {
-    message: 'Passwords is not same', path: ['confirmPass']
-})
+type SignUpForm = z.infer<typeof signUpSchema>;
 
-type UserFormTypes = z.infer<typeof userSchema>
+/** localStorage переживает вкладку — идентификатор должен быть настоящим. */
+function newUserId() {
+    return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `u_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export default function SignUp({ onSignUp }: { onSignUp: (data: User) => void }) {
-    const [modalState, setModalState] = useState<boolean>(false);
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<UserFormTypes>({
-        resolver: zodResolver(userSchema)
-    });
-    const ID = useId();
+    const [formError, setFormError] = useState<string | null>(null);
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<SignUpForm>({ resolver: zodResolver(signUpSchema) });
     const nav = useNavigate();
 
-    const onSubmit: SubmitHandler<UserFormTypes> = async (data) => {
-        if (data.password !== data.confirmPass) return 
+    const onSubmit: SubmitHandler<SignUpForm> = async (data) => {
+        setFormError(null);
+        // Раньше id брался из useId() — это идентификатор узла в дереве React
+        // («:r3:»), одинаковый у всех, кто зарегистрировался на той же странице.
+        const user: User = { id: newUserId(), name: data.name, email: data.email, password: data.password };
 
-        addUser({...data, id: ID})
-        onSignUp({...data, id: ID})
-        nav('/login')
-    }
-
-    const handleCloseModal = () => {
-        setModalState(true)
-    }
+        try {
+            await addUser(user);
+            onSignUp(user);
+            nav('/profile');
+        } catch (error) {
+            console.error(error);
+            setFormError('We could not create the account. That email may already be taken');
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-mauve-950 flex items-center justify-center py-12 px-4">
-            <div className="w-full max-w-md">
-                <div className="text-center mb-10">
-                    <h1 className="text-mauve-100 font-bold text-3xl mb-2">Create Account</h1>
-                    <p className="text-mauve-400">Join the eco-friendly tech community</p>
-                </div>
-                <div className="bg-mauve-900 rounded-2xl border border-mauve-700 p-8">
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                        <div className="space-y-2">
-                            <label className="text-mauve-300 text-sm font-medium">
-                                Full Name
-                            </label>
-                            <div className="relative">
-                                <input 
-                                    {...register('name')} 
-                                    type="text"
-                                    placeholder="John Doe"
-                                    className="w-full pl-5 pr-4 py-3 bg-mauve-800 border border-mauve-600 rounded-xl 
-                                            text-mauve-200 placeholder-mauve-500
-                                            focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                            transition-all duration-300 mt-2"
-                                />
-                            </div>
-                            {errors.name && (
-                                <p className="flex items-center gap-1 text-red-400 text-sm">
-                                    <svg className="w-4 h-4 fill-red-400" viewBox="0 0 24 24">
-                                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    {errors.name.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-mauve-300 text-sm font-medium">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <input 
-                                    {...register('email')} 
-                                    type="email"
-                                    placeholder="john@example.com"
-                                    className="w-full pl-5 pr-4 py-3 bg-mauve-800 border border-mauve-600 rounded-xl 
-                                            text-mauve-200 placeholder-mauve-500
-                                            focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                            transition-all duration-300 mt-2"
-                                />
-                            </div>
-                            {errors.email && (
-                                <p className="flex items-center gap-1 text-red-400 text-sm">
-                                    <svg className="w-4 h-4 fill-red-400" viewBox="0 0 24 24">
-                                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    {errors.email.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-mauve-300 text-sm font-medium">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <input 
-                                    {...register('password')} 
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="w-full pl-5 pr-4 py-3 bg-mauve-800 border border-mauve-600 rounded-xl 
-                                            text-mauve-200 placeholder-mauve-500
-                                            focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                            transition-all duration-300 mt-2"
-                                />
-                            </div>
-                            {errors.password && (
-                                <p className="flex items-center gap-1 text-red-400 text-sm">
-                                    <svg className="w-4 h-4 fill-red-400" viewBox="0 0 24 24">
-                                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    {errors.password.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-mauve-300 text-sm font-medium">
-                                Repeat password
-                            </label>
-                            <div className="relative">
-                                <input 
-                                    {...register('confirmPass')} 
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="w-full pl-5 pr-4 py-3 bg-mauve-800 border border-mauve-600 rounded-xl 
-                                            text-mauve-200 placeholder-mauve-500
-                                            focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                            transition-all duration-300 mt-2"
-                                />
-                            </div>
-                            {errors.confirmPass && (
-                                <p className="flex items-center gap-1 text-red-400 text-sm">
-                                    <svg className="w-4 h-4 fill-red-400" viewBox="0 0 24 24">
-                                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    {errors.confirmPass.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="bg-mauve-800 rounded-xl p-4 border border-mauve-700">
-                            <p className="text-mauve-400 text-xs font-medium mb-2">Password must contain:</p>
-                            <ul className="space-y-1">
-                                <li className="flex items-center gap-2 text-mauve-500 text-xs">
-                                    <svg className="w-3 h-3 fill-mauve-600" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10"/>
-                                    </svg>
-                                    At least 8 characters
-                                </li>
-                                <li className="flex items-center gap-2 text-mauve-500 text-xs">
-                                    <svg className="w-3 h-3 fill-mauve-600" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10"/>
-                                    </svg>
-                                    One uppercase letter
-                                </li>
-                                <li className="flex items-center gap-2 text-mauve-500 text-xs">
-                                    <svg className="w-3 h-3 fill-mauve-600" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10"/>
-                                    </svg>
-                                    One number
-                                </li>
-                            </ul>
-                        </div>
-                        <button 
-                            type="submit" 
-                            disabled={isSubmitting}
-                            className="w-full py-4 bg-linear-to-r from-emerald-800 to-green-700 
-                                    text-mauve-100 font-semibold text-lg rounded-xl cursor-pointer 
-                                    transition-all duration-300 ease-in-out
-                                    hover:from-green-700 hover:to-emerald-800 
-                                    hover:scale-[1.02] active:scale-95
-                                    disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100
-                                    flex items-center justify-center gap-2"
-                        >
-                            {isSubmitting ? 'Creating...' : 'Create Account'}
-                        </button>
-                    </form>
-                </div>
-                <p className="text-center mt-8 text-mauve-400">
+        <AuthLayout
+            eyebrow="Create account"
+            title="Join GreenTech"
+            lede="Track your orders and see what your choices add up to"
+            aside="Compare devices on more than price"
+            footer={
+                <>
                     Already have an account?{' '}
-                    <Link 
-                        to="/login" 
-                        className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors duration-300"
-                    >
-                        Login
+                    <Link to="/login" className="font-medium text-moss underline underline-offset-4">
+                        Sign in
                     </Link>
-                </p>
-            </div>
-            {<SuccessModal state={modalState} message="Registration is successful!" onClose={handleCloseModal}/>}
-        </div>
-    )
+                </>
+            }
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+                <Field label="Full name" error={errors.name?.message}>
+                    {(props) => (
+                        <Input {...props} {...register('name')} autoComplete="name" placeholder="John Doe" />
+                    )}
+                </Field>
+
+                <Field label="Email" error={errors.email?.message}>
+                    {(props) => (
+                        <Input
+                            {...props}
+                            {...register('email')}
+                            type="email"
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                        />
+                    )}
+                </Field>
+
+                <Field label="Password" hint="At least five characters" error={errors.password?.message}>
+                    {(props) => (
+                        <Input
+                            {...props}
+                            {...register('password')}
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="••••••••"
+                        />
+                    )}
+                </Field>
+
+                <Field label="Repeat password" error={errors.confirmPass?.message}>
+                    {(props) => (
+                        <Input
+                            {...props}
+                            {...register('confirmPass')}
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="••••••••"
+                        />
+                    )}
+                </Field>
+
+                {formError && (
+                    <p role="alert" className="rounded-inset border border-rust/30 bg-rust/5 p-4 text-sm text-rust">
+                        {formError}
+                    </p>
+                )}
+
+                <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating the account…' : 'Create account'}
+                </Button>
+            </form>
+        </AuthLayout>
+    );
 }

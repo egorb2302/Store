@@ -1,130 +1,109 @@
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { fetchUsers } from "../api/api";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
-import type { User } from "../types/types";
+import { z } from 'zod';
+import AuthLayout from '../components/AuthLayout';
+import { Button } from '../components/ui/button';
+import { Field, Input } from '../components/ui/field';
+import { fetchUsers } from '../api/api';
+import type { User } from '../types/types';
 
-const userSchema = z.object({
-    name: z.string().min(2, '2 is min length of name').optional(),
-    email: z.string().email('Uncorrect email format'),
-    password: z.string().min(3, '3 is minimum length of name'),
-})
+const loginSchema = z.object({
+    email: z.string().min(1, 'Enter your email').email('That does not look like an email'),
+    password: z.string().min(1, 'Enter your password'),
+});
 
-type UserFormTypes = z.infer<typeof userSchema>
+type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login({ onLogin }: { onLogin: (data: User) => void }) {
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<UserFormTypes>({
-        resolver: zodResolver(userSchema)
-    });
+    const [formError, setFormError] = useState<string | null>(null);
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
     const nav = useNavigate();
 
-    const onSubmit: SubmitHandler<UserFormTypes> = async (data) => {
+    // Раньше все три исхода уходили в console.log: человек жал «Войти»,
+    // ничего не происходило, и понять почему было нельзя.
+    const onSubmit: SubmitHandler<LoginForm> = async (data) => {
+        setFormError(null);
         try {
             const users = await fetchUsers();
-            const currentUser = users.find(u => u.email === data.email)
+            const currentUser = users.find((user) => user.email === data.email);
 
-            if (!currentUser) {
-                console.log('User is not found')
-                return
-            } 
-
-            if (currentUser.password !== data.password) {
-                console.log('Invalid pass')
-                return
+            if (!currentUser || currentUser.password !== data.password) {
+                setFormError('That email and password do not match an account');
+                return;
             }
 
-            onLogin(currentUser)
-            nav('/profile')
-            
-        } catch (er) {
-            console.log(er)
+            onLogin(currentUser);
+            nav('/profile');
+        } catch (error) {
+            console.error(error);
+            setFormError('We could not reach the account service. Try again in a moment');
         }
-    }
+    };
 
     return (
-        <div className="min-h-screen bg-mauve-950 flex items-center justify-center py-12 px-4">
-            <div className="w-full max-w-md">
-                <div className="text-center mb-10">
-                    <h1 className="text-mauve-100 font-bold text-3xl mb-2">Welcome Back</h1>
-                    <p className="text-mauve-400">Sign in to your eco-friendly account</p>
-                </div>
-                <div className="bg-mauve-900 rounded-2xl border border-mauve-700 p-8">
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                        <div className="space-y-2">
-                            <label className="text-mauve-300 text-sm font-medium">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <input 
-                                    {...register('email')} 
-                                    type="email"
-                                    placeholder="john@example.com"
-                                    className="w-full pl-5 pr-4 py-3 bg-mauve-800 border border-mauve-600 rounded-xl 
-                                            text-mauve-200 placeholder-mauve-500
-                                            focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                            transition-all duration-300 mt-2"
-                                />
-                            </div>
-                            {errors.email && (
-                                <p className="flex items-center gap-1 text-red-400 text-sm">
-                                    {errors.email.message}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label className="text-mauve-300 text-sm font-medium">
-                                    Password
-                                </label>
-                                <a href="#" className="text-emerald-400 text-sm hover:text-emerald-300 transition-colors duration-300">
-                                    Forgot password?
-                                </a>
-                            </div>
-                            <div className="relative">
-                                <input 
-                                    {...register('password')} 
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="w-full pl-5 pr-4 py-3 bg-mauve-800 border border-mauve-600 rounded-xl 
-                                            text-mauve-200 placeholder-mauve-500
-                                            focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                            transition-all duration-300"
-                                />
-                            </div>
-                            {errors.password && (
-                                <p className="flex items-center gap-1 text-red-400 text-sm">
-                                    <svg className="w-4 h-4 fill-red-400" viewBox="0 0 24 24">
-                                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    {errors.password.message}
-                                </p>
-                            )}
-                        </div>
-                        <button 
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-4 bg-linear-to-r from-emerald-800 to-green-700 
-                                    text-mauve-100 font-semibold text-lg rounded-xl cursor-pointer 
-                                    transition-all duration-300 ease-in-out
-                                    hover:from-green-700 hover:to-emerald-800 
-                                    hover:scale-[1.02] active:scale-95
-                                    disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100
-                                    flex items-center justify-center gap-2"
-                        >
-                            {isSubmitting ? 'Login...' : 'Login'}
-                        </button>
-                    </form>
-                </div>
-                <Link to="/signup">
-                    <p className="text-center mt-8 text-mauve-400">
-                        Don't have an account?{' '}
-                        <span className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors duration-300">
-                            Sign Up
-                        </span>
+        <AuthLayout
+            eyebrow="Sign in"
+            title="Welcome back"
+            lede="Your orders, your saved devices and your green impact"
+            aside="Every device we sell is scored on the same three criteria"
+            footer={
+                <>
+                    No account yet?{' '}
+                    <Link to="/signup" className="font-medium text-moss underline underline-offset-4">
+                        Create one
+                    </Link>
+                </>
+            }
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+                <Field label="Email" error={errors.email?.message}>
+                    {(props) => (
+                        <Input
+                            {...props}
+                            {...register('email')}
+                            type="email"
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                        />
+                    )}
+                </Field>
+
+                <Field
+                    label="Password"
+                    error={errors.password?.message}
+                    action={
+                        <a href="#" className="text-sm text-moss underline underline-offset-4">
+                            Forgot password?
+                        </a>
+                    }
+                >
+                    {(props) => (
+                        <Input
+                            {...props}
+                            {...register('password')}
+                            type="password"
+                            autoComplete="current-password"
+                            placeholder="••••••••"
+                        />
+                    )}
+                </Field>
+
+                {formError && (
+                    <p role="alert" className="rounded-inset border border-rust/30 bg-rust/5 p-4 text-sm text-rust">
+                        {formError}
                     </p>
-                </Link>
-            </div>
-        </div>
-    )
+                )}
+
+                <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Signing in…' : 'Sign in'}
+                </Button>
+            </form>
+        </AuthLayout>
+    );
 }

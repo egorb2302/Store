@@ -1,85 +1,92 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import useCartStore from "../stores/store";
-import { useMutation } from "@tanstack/react-query";
-import { addOrder, removeProduct } from "../api/api";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { z } from 'zod';
+import { Lock } from 'lucide-react';
+import useCartStore from '../stores/store';
+import { addOrder, removeProduct } from '../api/api';
 import type { Product } from '../types/types';
+import { Button } from './ui/button';
+import { Field, Input } from './ui/field';
+import SuccessModal from './SuccesModal';
 
 const orderSchema = z.object({
-    name: z.string().min(2, 'Min length of name is 2 spells'),
-    email: z.string().email('Uncorrect format of email'),
-    phone: z.string().min(10, 'Min length of phone number is 10')
-})
+    name: z.string().min(2, 'Enter the name for the delivery'),
+    email: z.string().min(1, 'Enter your email').email('That does not look like an email'),
+    phone: z.string().min(10, 'Include the area code, at least 10 digits'),
+});
 
 type OrderForm = z.infer<typeof orderSchema>;
 
 export default function CartOrder({ cartItems }: { cartItems: Product[] }) {
-    const { register, handleSubmit, formState: { errors, isSubmitting }} = useForm<OrderForm>({
-        resolver: zodResolver(orderSchema)
-    })
+    const [done, setDone] = useState(false);
+    const [failed, setFailed] = useState(false);
+    const { clearCart } = useCartStore();
 
-    const { items, clearCart } = useCartStore();
-
-    const mutate = useMutation({
-        mutationFn: () => removeFromBD(items)
-    })
-
-    const removeFromBD = async (items: Product[]): Promise<void> => {
-        items.forEach(item => {
-            removeProduct(item.id)
-        });
-        clearCart()
-    }
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting },
+    } = useForm<OrderForm>({ resolver: zodResolver(orderSchema) });
 
     const onSubmit = async (data: OrderForm) => {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        mutate.mutate();
-        cartItems.forEach(item => {
-            addOrder(item)
-        })
+        setFailed(false);
+        try {
+            // Порядок важен: сначала фиксируем заказ, и только потом снимаем
+            // товары с витрины. Раньше удаление шло первым, и сбой при
+            // создании заказа оставлял магазин без товара и без заказа.
+            await Promise.all(cartItems.map((item) => addOrder(item)));
+            await Promise.all(cartItems.map((item) => removeProduct(item.id)));
 
-        console.log('Form data: ' + JSON.stringify(data))
-        alert('Ordering is succesful!');
-    }
+            console.info('Order placed for', data.email);
+            clearCart();
+            reset();
+            setDone(true);
+        } catch (error) {
+            console.error(error);
+            setFailed(true);
+        }
+    };
 
     return (
-        <div>
-            <h1 className="text-mauve-200 font-bold text-3xl mb-5">Order</h1>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="mb-3">
-                    <label className="text-mauve-600 text-sm font-medium">Name:</label>
-                    <input className="w-full px-4 py-3 bg-mauve-800 border border-mauve-700 rounded-xl 
-               text-mauve-200 placeholder-mauve-500 font-semibold
-               focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-               transition-all duration-300" {...register('name')} />
-                </div>
-                {errors.name && <p>{errors.name.message}</p>}
-                <div className="mb-3">
-                    <label className="text-mauve-600 text-sm font-medium">Phone:</label>
-                    <input className="w-full px-4 py-3 bg-mauve-800 border border-mauve-700 rounded-xl 
-               text-mauve-200 placeholder-mauve-500 font-semibold
-               focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-               transition-all duration-300" {...register('phone')} />
-                </div>
-                {errors.phone && <p>{errors.phone.message}</p>}
-                <div className="mb-3">
-                    <label className="text-mauve-600 text-sm font-medium">Email:</label>
-                    <input className="w-full px-4 py-3 bg-mauve-800 border border-mauve-700 rounded-xl 
-               text-mauve-200 placeholder-mauve-500 font-semibold
-               focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-               transition-all duration-300" {...register('email')} />
-                </div>
-                {errors.email && <p>{errors.email.message}</p>}
-                <button className="w-full py-3 px-6 bg-linear-to-r from-emerald-800 to-green-700 
-                   text-mauve-200 font-semibold rounded-xl cursor-pointer 
-                   transition-all duration-300 ease-in-out
-                   hover:bg-linear-to-l hover:from-green-700 hover:to-emerald-800 
-                   hover:scale-[1.02] active:scale-95 mt-7.5" type="submit">
-                    {isSubmitting ? 'Ordering...' : 'Order'}
-                </button>
+        <>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+                <Field label="Name" error={errors.name?.message}>
+                    {(props) => <Input {...props} {...register('name')} autoComplete="name" />}
+                </Field>
+
+                <Field label="Email" hint="The receipt and tracking go here" error={errors.email?.message}>
+                    {(props) => (
+                        <Input {...props} {...register('email')} type="email" autoComplete="email" />
+                    )}
+                </Field>
+
+                <Field label="Phone" error={errors.phone?.message}>
+                    {(props) => <Input {...props} {...register('phone')} type="tel" autoComplete="tel" />}
+                </Field>
+
+                {failed && (
+                    <p className="rounded-inset border border-rust/30 bg-rust/5 p-4 text-sm text-rust">
+                        The order did not go through. Nothing was charged, so try again in a moment
+                    </p>
+                )}
+
+                <Button type="submit" size="lg" variant="moss" className="w-full" disabled={isSubmitting}>
+                    <Lock className="h-4 w-4" aria-hidden />
+                    {isSubmitting ? 'Placing the order…' : 'Place the order'}
+                </Button>
+
+                <p className="text-center text-xs text-bark-soft">
+                    Carbon-neutral delivery, free over $500
+                </p>
             </form>
-            {errors.form && <p>{errors.form.message}</p>}
-        </div>
-    )
+
+            <SuccessModal
+                state={done}
+                message="Your order is in. We'll email the tracking number once it ships"
+                onClose={() => setDone(false)}
+            />
+        </>
+    );
 }

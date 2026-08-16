@@ -1,14 +1,244 @@
 @import 'tailwindcss';
 
-html {
-    overflow-x: hidden;
+/* ---------------------------------------------------------------------------
+   GreenTech — «каталог, отпечатанный на переработанной бумаге».
+
+   Нейтраль здесь бумажная, с холодным зелёным подмесом: девайсы на снимках
+   тёплые и пёстрые, и подложка обязана уступать им, а не спорить. Тёмный
+   хвойный работает не фоном, а двумя полосами — шапкой и подвалом, — между
+   которыми лежит лист.
+
+   Яркий лист (sprout) выдаётся ровно трём вещам: класс индекса, подтверждение
+   «в корзине» и кольцо фокуса. Как только им начнут красить кнопки, шкала
+   индекса перестанет читаться, и весь смысл подписного элемента пропадёт.
+--------------------------------------------------------------------------- */
+
+@theme {
+    --color-paper: #edf0e7;
+    --color-pulp: #dfe5d6;
+    --color-fibre: #cdd5c0;
+    --color-pine: #10281c;
+    --color-pine-soft: #1b3b2a;
+    --color-moss: #2e6b45;
+    --color-moss-deep: #235437;
+    --color-sprout: #b6e04e;
+    /* Оба оттенка проверены на контраст и на бумаге, и на пульпе: 7.9:1 и
+       4.8:1. Прежний bark-soft был красивее, но давал 3:1 — подписи под
+       карточками и плейсхолдеры в полях читались с усилием. */
+    --color-bark: #4c4940;
+    --color-bark-soft: #67624f;
+    --color-rust: #a8442a;
+
+    --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+    --font-sans: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+    --radius-card: 0.875rem;
+    --radius-inset: 0.625rem;
+
+    --shadow-lift: 0 1px 2px rgb(16 40 28 / 0.06), 0 12px 28px -14px rgb(16 40 28 / 0.28);
+    --shadow-band: 0 18px 40px -28px rgb(16 40 28 / 0.55);
+
+    --animate-draw-bar: draw-bar 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    --animate-rise: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    --animate-snap: snap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    --animate-sweep: sweep 1.1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    --animate-bump: bump 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --animate-slide-in: slide-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    --animate-fade-in: fade-in 0.35s ease-out backwards;
 }
 
-body {
-    overflow-x: hidden;
-    background-image: linear-gradient(to bottom, var(--color-emerald-900), var(--color-emerald-950));
+@keyframes draw-bar {
+    from {
+        transform: scaleX(0);
+        opacity: 0;
+    }
 }
 
-input:focus {
-    outline: none;
+@keyframes rise {
+    from {
+        transform: translateY(1.25rem);
+        opacity: 0;
+    }
+}
+
+@keyframes snap {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+}
+
+/* Стрелка на числовой шкале индекса выезжает от нуля к своему делению:
+   этикетка ведёт себя как прибор, который берёт замер, а не как картинка. */
+@keyframes sweep {
+    from {
+        left: 0%;
+    }
+}
+
+@keyframes bump {
+    40% {
+        transform: scale(1.35);
+    }
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.4rem);
+    }
+}
+
+@layer base {
+    html {
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+    }
+
+    /* Фактура кладётся тайлом 300×300 с бесшовной сшивкой турбулентности.
+       Отдельным слоем, а не картинкой в разметке: так она не мешает ни
+       выделению текста, ни попаданию по элементам. */
+    body {
+        overflow-x: hidden;
+        background-color: var(--color-paper);
+        background-image: url('/grain-sheet.svg');
+        background-size: 300px 300px;
+        color: var(--color-pine);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-display);
+        letter-spacing: -0.03em;
+        line-height: 1.02;
+    }
+
+    /* Кольцо фокуса двухслойное: хвойный контур читается на бумаге, лист —
+       на тёмных полосах. Одноцветное кольцо пропадало бы на одном из двух. */
+    :focus-visible {
+        outline: 2px solid var(--color-pine);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-sprout) 85%, transparent);
+        border-radius: 4px;
+    }
+
+    ::selection {
+        background: var(--color-sprout);
+        color: var(--color-pine);
+    }
+}
+
+@layer components {
+    .wrap {
+        width: 100%;
+        max-width: 78rem;
+        margin-inline: auto;
+        padding-inline: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .wrap {
+            padding-inline: 2rem;
+        }
+    }
+
+    /* Служебная строка: код критерия, цена, характеристика. Всё, что читается
+       как данные, а не как речь, набирается этим. */
+    .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .reveal {
+        opacity: 0;
+        transform: translateY(1.5rem);
+        transition:
+            opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal[data-shown='true'] {
+        opacity: 1;
+        transform: none;
+    }
+
+    /* Крупные поверхности получают свою фактуру: бумага, картон, крашеный
+       картон. Мелочь вроде полей ввода и плашек остаётся гладкой — на площади
+       в два сантиметра зерно превращается в грязь. */
+    .tex-sheet {
+        background-image: url('/grain-sheet.svg');
+        background-size: 300px 300px;
+    }
+
+    .tex-pulp {
+        background-image: url('/grain-pulp.svg');
+        background-size: 300px 300px;
+    }
+
+    .tex-pine {
+        background-image: url('/grain-pine.svg');
+        background-size: 300px 300px;
+    }
+
+    /* Приводочные метки — те самые уголки, по которым в типографии совмещают
+       краски. Ставятся только на две этикетки: на главной и на странице
+       товара. Если раскидать их по всем карточкам, знак станет узором. */
+    .crop-marks::before,
+    .crop-marks::after {
+        content: '';
+        position: absolute;
+        width: 0.875rem;
+        height: 0.875rem;
+        border: 1px solid var(--color-bark-soft);
+        opacity: 0.45;
+        pointer-events: none;
+    }
+
+    .crop-marks::before {
+        top: 0.5rem;
+        left: 0.5rem;
+        border-right: 0;
+        border-bottom: 0;
+    }
+
+    .crop-marks::after {
+        right: 0.5rem;
+        bottom: 0.5rem;
+        border-left: 0;
+        border-top: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .reveal {
+        opacity: 1;
+        transform: none;
+    }
 }

@@ -80,10 +80,13 @@ export interface User {
     confirmPass?: string
 }
 
-export type Category = "laptops" 
-    | "phones" 
-    | "audio" 
-    | "accesories" 
+// В базе категория аксессуаров записана как "accessories", а в типах стояло
+// "accesories" — из-за этой опечатки фильтр по аксессуарам не находил ничего,
+// а в хлебных крошках вместо подписи выводился сырой ключ.
+export type Category = "laptops"
+    | "phones"
+    | "audio"
+    | "accessories"
     | "monitors"
     | "tablets"
     | "components"
@@ -94,7 +97,7 @@ interface CartItem extends Product {
 
 export interface StoreType {
     items: CartItem[],
-    addItem: (product: Product) => void,
+    addItem: (product: Product, quantity?: number) => void,
     removeItem: (id: number) => void,
     updateQuantity: (id: number, quantity: number) => void,
     clearCart: () => void,

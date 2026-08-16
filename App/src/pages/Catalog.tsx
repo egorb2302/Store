@@ -1,249 +1,343 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchProducts } from "../api/api";
-import { Link, useSearchParams } from "react-router";
-import useCartStore from "../stores/store";
-import type { Category, Product } from "../types/types";
-import { useState, useEffect, useRef } from "react";
-import { SuspenseFallback } from "../components/SuspenseFallback";
+import { useQuery } from '@tanstack/react-query';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router';
+import { fetchProducts } from '../api/api';
+import ProductCard from '../components/ProductCard';
+import { Button } from '../components/ui/button';
+import { Skeleton } from '../components/ui/skeleton';
+import { CATEGORIES, CATEGORY_LABEL } from '../lib/categories';
+import { ecoRating } from '../lib/eco';
+import { cn } from '../lib/utils';
+import type { Category, Product } from '../types/types';
+
+/**
+ * Фильтры живут в адресной строке, а не в useState.
+ *
+ * Так подборка становится ссылкой: её можно отправить, положить в закладки и
+ * вернуться к ней кнопкой «назад». Раньше категории и наличие лежали в
+ * состоянии компонента, «назад» уносило со страницы целиком, а с главной
+ * нельзя было привести человека сразу в нужный раздел.
+ */
+
+const SORTS = [
+    { key: 'featured', label: 'Featured' },
+    { key: 'index', label: 'Best index' },
+    { key: 'price-asc', label: 'Price, low first' },
+    { key: 'price-desc', label: 'Price, high first' },
+    { key: 'rating', label: 'Top rated' },
+] as const;
+
+type SortKey = (typeof SORTS)[number]['key'];
+
+function sortProducts(products: Product[], sort: SortKey) {
+    const copy = [...products];
+    switch (sort) {
+        case 'index':
+            return copy.sort((a, b) => ecoRating(b).score - ecoRating(a).score);
+        case 'price-asc':
+            return copy.sort((a, b) => a.price - b.price);
+        case 'price-desc':
+            return copy.sort((a, b) => b.price - a.price);
+        case 'rating':
+            return copy.sort((a, b) => b.rating - a.rating);
+        default:
+            return copy;
+    }
+}
 
 export default function Catalog() {
-    const { data: products, error, isLoading } = useQuery({
-        queryKey: ['products'],
-        queryFn: () => fetchProducts()
-    });
     const [searchParams, setSearchParams] = useSearchParams();
-    const [getParams, setParams] = useState({ title: ''});
-    const [clicked, setClicked] = useState<number[]>([]);
-    const [category, setCategory] = useState<Category[]>([]);
-    const [onlyInStock, setOnlyInStock] = useState<boolean>(false);
-    const { addItem, items } = useCartStore();
-    const inputRef = useRef<HTMLInputElement | null>(null);
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
-    const title = searchParams.get('title') || '';
+    const {
+        data: products,
+        error,
+        isLoading,
+    } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
 
-    useEffect(() => {
-        console.log(items.length)
-    }, [items.length])
+    const query = searchParams.get('q') ?? '';
+    const selected = (searchParams.get('category')?.split(',').filter(Boolean) ?? []) as Category[];
+    const inStockOnly = searchParams.get('stock') === '1';
+    const sort = (SORTS.find((item) => item.key === searchParams.get('sort'))?.key ?? 'featured') as SortKey;
+    const hasFilters = query !== '' || selected.length > 0 || inStockOnly;
 
-    if (!products) return
+    const patchParams = (patch: Record<string, string | null>) => {
+        const next = new URLSearchParams(searchParams);
+        Object.entries(patch).forEach(([key, value]) => {
+            if (value === null || value === '') next.delete(key);
+            else next.set(key, value);
+        });
+        setSearchParams(next, { replace: true });
+    };
 
-    const categorySearch = (cat: Category) => {
-        setCategory(prev => {
-            if (prev.includes(cat)) {
-                return prev.filter(c => c !== cat)
-            } else {
-                return [...prev, cat]
-            }
-        })
-    }
+    const toggleCategory = (category: Category) => {
+        const next = selected.includes(category)
+            ? selected.filter((item) => item !== category)
+            : [...selected, category];
+        patchParams({ category: next.join(',') });
+    };
 
-    const filtredProducts = products.filter(p => {
-        const titleMatch = title === '' || p.name.toLowerCase().includes(title.toLowerCase());
-        const categoryMatch = category.length === 0 || category.includes(p.category);
-        const stockMatch = !onlyInStock || p.inStock;
-        
-        return titleMatch && categoryMatch && stockMatch;
-    })
+    const matchesQuery = (product: Product) =>
+        query === '' || `${product.name} ${product.brand}`.toLowerCase().includes(query.toLowerCase());
+    const matchesStock = (product: Product) => !inStockOnly || product.inStock;
 
-    const updateFilter = (value: string) => {
-        if (value === '') {
-            setParams({ title: ''})
-        } else {
-            setParams({ title: value.toLowerCase() })
-        }
-    }
+    const visible = sortProducts(
+        (products ?? []).filter(
+            (product) =>
+                matchesQuery(product) &&
+                matchesStock(product) &&
+                (selected.length === 0 || selected.includes(product.category)),
+        ),
+        sort,
+    );
 
-    const clearFilter = () => {
-        if (inputRef.current) {
-            inputRef.current.value = '';
-        }
-        setSearchParams({})
-    }
-    
-    const handleCartAdding = async (p: Product, index: number) => {
-        const newStates = [...clicked, index];
-        setClicked(newStates)
+    // Счётчик у категории показывает, сколько найдётся при её включении, то есть
+    // считается по остальным фильтрам, но без учёта самих категорий. Иначе после
+    // первого же выбора у всех соседей встали бы нули.
+    const countFor = (category: Category) =>
+        (products ?? []).filter(
+            (product) => product.category === category && matchesQuery(product) && matchesStock(product),
+        ).length;
 
-        addItem(p)
-    }
+    const filterPanel = (
+        <div className="space-y-7">
+            <fieldset>
+                <legend className="eyebrow text-bark">Category</legend>
+                <div className="mt-4 space-y-1">
+                    {CATEGORIES.map((category) => {
+                        const count = countFor(category.key);
+                        return (
+                            <label
+                                key={category.key}
+                                className={cn(
+                                    'flex cursor-pointer items-center gap-3 rounded py-1.5 text-[0.9375rem] transition-colors duration-200',
+                                    count === 0 ? 'text-bark-soft' : 'text-pine hover:text-moss',
+                                )}
+                            >
+                                <input
+                                    type="checkbox"
+                                    className="h-4 w-4 accent-moss"
+                                    checked={selected.includes(category.key)}
+                                    onChange={() => toggleCategory(category.key)}
+                                />
+                                <span className="flex-1">{category.label}</span>
+                                <span className="font-mono text-xs text-bark-soft">{count}</span>
+                            </label>
+                        );
+                    })}
+                </div>
+            </fieldset>
 
-    if (isLoading) return <SuspenseFallback/>
-    if (error) throw new Error('Error of render products in catalog')
+            <fieldset className="border-t border-fibre pt-6">
+                <legend className="eyebrow text-bark">Availability</legend>
+                <label className="mt-4 flex cursor-pointer items-center gap-3 py-1.5 text-[0.9375rem] text-pine transition-colors duration-200 hover:text-moss">
+                    <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-moss"
+                        checked={inStockOnly}
+                        onChange={(event) => patchParams({ stock: event.target.checked ? '1' : null })}
+                    />
+                    Ships today
+                </label>
+            </fieldset>
+        </div>
+    );
 
     return (
-        <div>
-            <div className="w-full bg-mauve-900 h-auto sm:h-16 flex flex-col sm:flex-row 
-                    justify-center items-stretch sm:items-center gap-3 sm:gap-4 
-                    px-3 sm:px-4 py-3 sm:py-0 border-b border-mauve-700">
-                <div className="relative flex-1 sm:flex-none">
-                    <input 
-                        className="bg-mauve-800 border border-mauve-700 rounded-xl 
-                                    pl-9 sm:pl-10 pr-4 sm:pr-5 py-2 w-full sm:w-64 md:w-80 lg:w-300
-                                    text-mauve-200 placeholder-mauve-500 text-sm sm:text-base font-medium
-                                    focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                    transition-all duration-300"
-                        ref={inputRef} 
-                        type="text" 
-                        placeholder="Search products..." 
-                        onChange={(e) => updateFilter(e.target.value)}
-                    />
+        <div className="wrap py-12 sm:py-16">
+            <header className="flex flex-wrap items-end justify-between gap-6">
+                <div>
+                    <p className="eyebrow text-bark">Catalog</p>
+                    <h1 className="mt-3 text-4xl font-extrabold text-pine sm:text-5xl">
+                        Everything on the shelf
+                    </h1>
                 </div>
-                <div className="flex gap-2 sm:gap-3">
-                    <button 
-                        className="flex-1 sm:flex-none bg-linear-to-r from-emerald-800 to-green-700 text-mauve-100 
-                                    font-semibold rounded-xl py-2 px-4 sm:px-5 cursor-pointer text-sm sm:text-base
-                                    transition-all duration-300 hover:from-green-700 hover:to-emerald-800 
-                                    hover:scale-105 active:scale-95"
-                        onClick={() => setSearchParams(getParams)}
+
+                <form
+                    className="flex w-full max-w-md gap-2"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        const value = new FormData(event.currentTarget).get('q');
+                        patchParams({ q: typeof value === 'string' ? value.trim() : null });
+                    }}
+                    role="search"
+                >
+                    <label htmlFor="catalog-search" className="sr-only">
+                        Search products
+                    </label>
+                    <div className="relative flex-1">
+                        <Search
+                            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-bark-soft"
+                            aria-hidden
+                        />
+                        <input
+                            id="catalog-search"
+                            name="q"
+                            type="search"
+                            defaultValue={query}
+                            key={query}
+                            placeholder="Search by name or brand"
+                            className="w-full rounded-full border border-fibre bg-pulp py-3 pl-11 pr-4 text-pine placeholder:text-bark-soft transition-colors duration-200 hover:border-bark-soft focus:border-moss focus:bg-paper"
+                        />
+                    </div>
+                    <Button type="submit">Search</Button>
+                </form>
+            </header>
+
+            <div className="mt-10 flex flex-col gap-10 lg:flex-row lg:gap-14">
+                <aside className="lg:w-56 lg:shrink-0">
+                    <Button
+                        variant="outline"
+                        className="w-full lg:hidden"
+                        onClick={() => setFiltersOpen((open) => !open)}
+                        aria-expanded={filtersOpen}
+                        aria-controls="catalog-filters"
                     >
-                        Search
-                    </button>
-                    
-                    {getParams.title !== '' && 
-                        <button 
-                            className="flex-1 sm:flex-none bg-mauve-700 border-2 border-mauve-600 text-mauve-300 
-                                        font-semibold rounded-xl py-2 px-3 sm:px-4 cursor-pointer text-sm sm:text-base
-                                        hover:border-emerald-700 hover:text-emerald-400
-                                        transition-all duration-300"
-                            onClick={clearFilter}
-                        >
-                            Show All
-                        </button>
-                    }
-                </div>
-            </div>
-            <div className="flex flex-wrap justify-center gap-8 mb-40 px-4">
-                <div className="bg-mauve-900 h-fit sm:w-60 mt-10 sm:mt-32 rounded-xl sticky top-5 
-                                border border-mauve-700 p-5 w-full">
-                    <h3 className="text-mauve-100 font-bold text-lg mb-4">Filters</h3>
-                    <div className="space-y-3">
-                        <h4 className="text-mauve-300 font-semibold text-sm uppercase tracking-wider">Category</h4>
-                        <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
-                                            transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('laptops')}/> Laptops
+                        <SlidersHorizontal className="h-4 w-4" aria-hidden />
+                        Filters
+                        {hasFilters && (
+                            <span className="ml-1 rounded-full bg-sprout px-2 font-mono text-[0.625rem] text-pine">
+                                on
+                            </span>
+                        )}
+                    </Button>
+
+                    <div
+                        id="catalog-filters"
+                        className={cn(
+                            'mt-5 lg:sticky lg:top-24 lg:mt-0 lg:block',
+                            filtersOpen ? 'block' : 'hidden',
+                        )}
+                    >
+                        {filterPanel}
+                    </div>
+                </aside>
+
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-fibre pb-4">
+                        <p className="eyebrow text-bark">
+                            {isLoading
+                                ? 'Loading products'
+                                : `${visible.length} ${visible.length === 1 ? 'product' : 'products'}`}
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="catalog-sort" className="eyebrow text-bark-soft">
+                                Sort
                             </label>
-                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
-                                            transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('phones')}/> Phones
-                            </label>
-                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
-                                            transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('accesories')}/> Accesories
-                            </label>
-                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
-                                            transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('monitors')}/> Monitors
-                            </label>
-                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
-                                            transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('tablets')}/> Tablets
-                            </label>
-                            <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
-                                            transition-colors duration-300 cursor-pointer">
-                                <input type="checkbox" className="accent-emerald-600" onChange={() => categorySearch('components')}/> Components
-                            </label>
+                            <select
+                                id="catalog-sort"
+                                value={sort}
+                                onChange={(event) =>
+                                    patchParams({
+                                        sort: event.target.value === 'featured' ? null : event.target.value,
+                                    })
+                                }
+                                className="cursor-pointer rounded-full border border-fibre bg-pulp px-4 py-2 text-sm text-pine transition-colors duration-200 hover:border-bark-soft focus:border-moss"
+                            >
+                                {SORTS.map((option) => (
+                                    <option key={option.key} value={option.key}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
-                    <div className="border-t border-mauve-700 my-4"></div>
-                    <div className="space-y-3">
-                        <h4 className="text-mauve-300 font-semibold text-sm uppercase tracking-wider">Availability</h4>
-                        <label className="flex items-center gap-2 text-mauve-400 hover:text-emerald-400 
-                                        transition-colors duration-300 cursor-pointer">
-                            <input type="checkbox" className="accent-emerald-600" 
-                            onChange={(e) => setOnlyInStock(e.target.checked)}/> In Stock
-                        </label>
-                    </div>
-                    <div className="border-t border-mauve-700 my-4"></div>
-                </div>
-                <div className="flex-1 max-w-5xl">
-                    <h1 className="font-bold text-5xl my-10 text-mauve-100 flex items-center gap-3">
-                        Catalog
-                    </h1>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filtredProducts?.map(product => (
-                            <div key={product.id} 
-                                className="bg-mauve-800 rounded-xl overflow-hidden 
-                                            border border-mauve-700 hover:border-emerald-700
-                                            transition-all duration-300 hover:shadow-lg hover:shadow-emerald-900/20
-                                            group">
-                                <div className="relative overflow-hidden">
-                                    <img 
-                                        className="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                                        src={`${product.image}`} 
-                                        alt={product.name} 
-                                    />
-                                    <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold
-                                                ${product.inStock 
-                                                    ? 'bg-emerald-600/90 text-mauve-100' 
-                                                    : 'bg-mauve-600/90 text-mauve-300'}`}>
-                                        {product.inStock ? 'In Stock' : 'Pre-order'}
-                                    </span>
-                                </div>
-                                <div className="p-5 flex flex-col justify-between h-50">
-                                    <h2 className="text-mauve-100 font-bold text-lg mb-2 group-hover:text-emerald-400 
-                                                transition-colors duration-300">
-                                        {product.name}
-                                    </h2>
-                                    
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-emerald-400 font-bold text-2xl">
-                                            ${product.price}
-                                        </span>
-                                        <div className="flex items-center gap-1">
-                                            <svg className="w-4 h-4 fill-yellow-400" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                            </svg>
-                                            <span className="text-mauve-300 text-sm">{product.rating}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Link to={`/products/${product.id}`} className="flex-1">
-                                            <button className="w-full py-2 px-3 bg-mauve-700 border border-mauve-600 
-                                                            text-mauve-300 font-medium text-sm rounded-lg
-                                                            hover:border-emerald-700 hover:text-emerald-400
-                                                            transition-all duration-300">
-                                                Details
-                                            </button>
-                                        </Link>
-                                        
-                                        {!clicked.includes(product.id) && 
-                                            <button 
-                                                className="flex-1 py-2 px-3 bg-linear-to-r from-emerald-800 to-green-700 
-                                                        text-mauve-100 font-medium text-sm rounded-lg
-                                                        hover:from-green-700 hover:to-emerald-800
-                                                        transition-all duration-300 hover:scale-105"
-                                                onClick={() => handleCartAdding(product, product.id)}
-                                            >
-                                                Add to Cart
-                                            </button>
-                                        }
-                                        
-                                        {clicked.includes(product.id) && 
-                                            <div className="flex-1 py-2 px-3 bg-emerald-600/20 border border-emerald-600 
-                                                            rounded-lg flex items-center justify-center gap-2">
-                                                <svg className="w-4 h-4 fill-emerald-400" viewBox="0 0 24 24">
-                                                    <path d="M5 13l4 4L19 7"/>
-                                                </svg>
-                                                <p className="text-emerald-400 font-medium text-sm">In Cart</p>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    {filtredProducts?.length === 0 && (
-                        <div className="text-center py-20">
-                            <svg className="w-20 h-20 fill-mauve-600 mx-auto mb-4" viewBox="0 0 24 24">
-                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            <h3 className="text-mauve-400 text-xl mb-2">No products found</h3>
-                            <p className="text-mauve-500">Try adjusting your search or filters</p>
+
+                    {/* Что именно сейчас включено, видно прямо над сеткой, и снимается
+                        оттуда же. Иначе на телефоне фильтры прячутся за кнопкой, и
+                        человек не понимает, почему товаров вдруг стало три. */}
+                    {hasFilters && (
+                        <ul className="mt-4 flex flex-wrap items-center gap-2">
+                            {query && (
+                                <FilterChip label={`“${query}”`} onRemove={() => patchParams({ q: null })} />
+                            )}
+                            {selected.map((category) => (
+                                <FilterChip
+                                    key={category}
+                                    label={CATEGORY_LABEL[category] ?? category}
+                                    onRemove={() => toggleCategory(category)}
+                                />
+                            ))}
+                            {inStockOnly && (
+                                <FilterChip label="Ships today" onRemove={() => patchParams({ stock: null })} />
+                            )}
+                            <li>
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchParams({}, { replace: true })}
+                                    className="cursor-pointer px-2 py-1 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-bark underline underline-offset-4 transition-colors duration-200 hover:text-moss"
+                                >
+                                    Clear all
+                                </button>
+                            </li>
+                        </ul>
+                    )}
+
+                    {error && (
+                        <div className="mt-10 rounded-card border border-rust/30 bg-rust/5 p-8">
+                            <h2 className="text-2xl font-bold text-pine">The catalog did not load</h2>
+                            <p className="mt-2 text-bark">
+                                The product service did not answer. Nothing is wrong with your filters
+                            </p>
+                            <Button className="mt-6" onClick={() => window.location.reload()}>
+                                Try again
+                            </Button>
+                        </div>
+                    )}
+
+                    {isLoading && (
+                        <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                            {[0, 1, 2, 3, 4, 5].map((key) => (
+                                <Skeleton key={key} className="h-[26rem] rounded-card" />
+                            ))}
+                        </div>
+                    )}
+
+                    {!isLoading && !error && visible.length > 0 && (
+                        <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                            {visible.map((product, index) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                    className="animate-rise"
+                                    style={{ animationDelay: `${Math.min(index, 8) * 55}ms` }}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {!isLoading && !error && visible.length === 0 && (
+                        <div className="tex-pulp mt-8 rounded-card border border-fibre bg-pulp px-8 py-16 text-center">
+                            <h2 className="text-2xl font-bold text-pine">Nothing matches that</h2>
+                            <p className="mx-auto mt-3 max-w-sm text-bark">
+                                Try a shorter search, or drop a filter. There are {products?.length ?? 0}{' '}
+                                products in the catalog
+                            </p>
+                            <Button className="mt-7" onClick={() => setSearchParams({}, { replace: true })}>
+                                Clear all filters
+                            </Button>
                         </div>
                     )}
                 </div>
             </div>
         </div>
-    )
+    );
+}
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+    return (
+        <li>
+            <button
+                type="button"
+                onClick={onRemove}
+                className="group inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-fibre bg-pulp py-1.5 pl-3.5 pr-2.5 text-sm text-pine transition-colors duration-200 hover:border-rust/40 hover:text-rust"
+            >
+                {label}
+                <X className="h-3.5 w-3.5 text-bark-soft transition-colors duration-200 group-hover:text-rust" aria-hidden />
+                <span className="sr-only">Remove this filter</span>
+            </button>
+        </li>
+    );
 }

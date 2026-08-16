@@ -1,4 +1,11 @@
+import { normalizeCategory } from "../lib/categories";
 import type { Product, User } from "../types/types";
+
+/** Категорию чиним на входе, чтобы дальше по коду про варианты написания не помнить. */
+const normalize = (product: Product): Product => ({
+    ...product,
+    category: normalizeCategory(product.category),
+});
 
 // const API_PRODUCTS: string = 'http://localhost:3000/products'
 // const API_USERS: string = 'http://localhost:3000/users'
@@ -13,15 +20,15 @@ const API_EMAIL = '/api/emails'
 export const fetchProducts = async (): Promise<Product[]> => {
     const response = await fetch(`${API_PRODUCTS}`);
     if (!response.ok) throw new Error('Error of fetching all products')
-    const data = await response.json();
-    return data
+    const data: Product[] = await response.json();
+    return data.map(normalize)
 }
 
 export const fetchProduct = async (id: number): Promise<Product> => {
     const response = await fetch(`${API_PRODUCTS}/${id}`);
     if (!response.ok) throw new Error(`Error of fetching one product with id ${id}`)
-    const data = await response.json();
-    return data
+    const data: Product = await response.json();
+    return normalize(data)
 }
 
 export const removeProduct = async (id: number): Promise<Product> => {

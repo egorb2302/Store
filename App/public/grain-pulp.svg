@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <!--
+    Тот же лист, но грубее: панели из pulp — картон, вкраплений в нём заметно
+    больше, чем в основном полотне. Отличается только показатель степени
+    (6 против 7) и другое зерно шума, чтобы стык двух поверхностей не выдавал
+    одинаковый рисунок.
+  -->
+  <defs>
+    <filter id="tooth" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="1.05" numOctaves="2" seed="8" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.298  0 0 0 0 0.286  0 0 0 0 0.251  0.4 0 0 0 -0.17"/>
+    </filter>
+    <filter id="flecks" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="turbulence" baseFrequency="0.48" numOctaves="1" seed="29" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.298  0 0 0 0 0.286  0 0 0 0 0.251  1 0 0 0 0"/>
+      <feComponentTransfer>
+        <feFuncA type="gamma" amplitude="9" exponent="6" offset="0"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="300" height="300" filter="url(#tooth)" opacity="0.5"/>
+  <rect width="300" height="300" filter="url(#flecks)" opacity="0.55"/>
+</svg>

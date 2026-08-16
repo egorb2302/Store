@@ -6,7 +6,10 @@ const useCartStore = create<StoreType>()(
     persist(
         (set, get) => ({
             items: [],
-            addItem: (product: Product) => {
+            // Количество приходит параметром: со страницы товара человек мог
+            // выбрать «3», но в корзину всё равно падала одна штука.
+            addItem: (product: Product, quantity = 1) => {
+                const amount = Math.max(1, Math.floor(quantity));
                 const { items } = get();
                 const currentItem = items.find(i => i.id === product.id)
 
@@ -14,13 +17,13 @@ const useCartStore = create<StoreType>()(
                     set({
                         items: items.map(item =>
                             item.id === product.id
-                                ? { ...item, quantity: item.quantity + 1}
+                                ? { ...item, quantity: item.quantity + amount}
                                 : item
                         ),
                     });
                 } else {
                     set({
-                        items : [...items, { ...product, quantity: 1}]
+                        items : [...items, { ...product, quantity: amount}]
                     })
                 }
             },
@@ -64,6 +67,11 @@ const useCartStore = create<StoreType>()(
         }),
         {
             name: 'cart-storage',
+            // Корзина хранит копию товара целиком, поэтому после переименования
+            // каталога и смены снимков в ней остались старые названия и битые
+            // ссылки на картинки. Поднятая версия очищает такие корзины один раз.
+            version: 1,
+            migrate: () => ({ items: [] }) as Partial<StoreType>,
         }
     )
 )

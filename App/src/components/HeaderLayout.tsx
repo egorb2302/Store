@@ -1,184 +1,243 @@
-import { useState } from 'react';
-import { NavLink, Outlet } from "react-router";
-import cartIcon from '../assets/shopping-cart.svg';
-import useCartStore from "../stores/store";
-import useAuthStore from "../stores/auth";
-import Subscribe from '../components/Subscribe';
-import Menu from '../assets/text-align-justify.svg';
-import DropdownMenu from '../components/Menu';
+import { useEffect, useRef, useState } from 'react';
+import { Menu as MenuIcon, ShoppingBag } from 'lucide-react';
+import { NavLink, Outlet } from 'react-router';
+import { cn } from '../lib/utils';
+import useCartStore from '../stores/store';
+import useAuthStore from '../stores/auth';
+import Subscribe from './Subscribe';
+import DropdownMenu from './Menu';
+import { NAV_LINKS } from './nav-links';
+import { Button } from './ui/button';
+
+/** Тот же шеврон, что и на ступенях индекса — знак магазина собран из него. */
+function ChevronMark({ className = '' }: { className?: string }) {
+    return (
+        <span
+            aria-hidden
+            className={`inline-block h-5 w-3.5 bg-sprout ${className}`}
+            style={{ clipPath: 'polygon(0 0, 55% 0, 100% 50%, 55% 100%, 0 100%)' }}
+        />
+    );
+}
+
+export function Wordmark({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
+    return (
+        <span className="flex items-center gap-2">
+            <ChevronMark />
+            <span className="font-display text-2xl font-extrabold tracking-tight">
+                <span className={tone === 'dark' ? 'text-paper' : 'text-pine'}>Green</span>
+                <span className="text-sprout">Tech</span>
+            </span>
+        </span>
+    );
+}
+
+/** Шапка подбирается, как только страница тронулась с места. */
+function useScrolled(threshold = 8) {
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > threshold);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, [threshold]);
+
+    return scrolled;
+}
 
 export default function HeaderLayout() {
-    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [isOpen, setIsOpen] = useState(false);
     const { getTotalItems } = useCartStore();
     const { isAuth } = useAuthStore();
-    
-    const handleMenuClick = () => {
-        setIsOpen(!isOpen)
-    }
+    const cartCount = getTotalItems();
+    const scrolled = useScrolled();
+
+    // Счётчик подпрыгивает только когда товаров стало больше. На удалении и на
+    // первом рендере он молчит: подтверждать нужно действие, а не факт.
+    const [bump, setBump] = useState(0);
+    const previousCount = useRef(cartCount);
+
+    useEffect(() => {
+        if (cartCount > previousCount.current) setBump((tick) => tick + 1);
+        previousCount.current = cartCount;
+    }, [cartCount]);
 
     return (
-        <>
-            <header className="w-full flex items-center justify-between h-20 px-6 md:px-10 lg:px-20 
-                   bg-mauve-900 border-b-2 border-emerald-800 relative">
-                <div className="flex items-center gap-2">
-                    <h1 className="text-3xl md:text-4xl font-bold">
-                        <span className="text-emerald-400">Green</span>
-                        <span className="text-mauve-100">Tech.</span>
-                    </h1>
-                </div>
-                <nav className="hidden lg:flex gap-8">
-                    <NavLink to="/home" 
-                    className="text-mauve-300 hover:text-emerald-400 font-semibold text-lg 
-                    transition-colors duration-300">
-                        Home
+        <div className="flex min-h-screen flex-col bg-paper">
+            <a
+                href="#main"
+                className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-60 focus:rounded-full focus:bg-paper focus:px-5 focus:py-3 focus:font-medium focus:text-pine"
+            >
+                Skip to content
+            </a>
+
+            <header
+                className={cn(
+                    'tex-pine sticky top-0 z-40 bg-pine transition-shadow duration-300',
+                    scrolled && 'shadow-band',
+                )}
+            >
+                <div
+                    className={cn(
+                        'wrap flex items-center justify-between gap-6 transition-[height] duration-300',
+                        scrolled ? 'h-15' : 'h-18',
+                    )}
+                >
+                    <NavLink to="/home" aria-label="GreenTech home" className="flex h-11 items-center">
+                        <Wordmark />
                     </NavLink>
-                    <NavLink to="/products" 
-                    className="text-mauve-300 hover:text-emerald-400 font-semibold text-lg 
-                    transition-colors duration-300">
-                        Catalog
-                    </NavLink>
-                    <NavLink to="/about" 
-                    className="text-mauve-300 hover:text-emerald-400 font-semibold text-lg 
-                    transition-colors duration-300">
-                        About
-                    </NavLink>
-                </nav>
-                <div className="flex items-center gap-4 md:gap-6">
-                    <NavLink to="/cart" className="relative group">
-                        <img className="filter invert sepia hue-rotate-90 h-7" src={cartIcon} alt="" />
-                        {getTotalItems() > 0 && (
-                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-emerald-500 rounded-full 
-                                            flex items-center justify-center text-xs font-bold text-white">
-                                {getTotalItems()}
-                            </span>
-                        )}
-                    </NavLink>
-                    <div className="hidden md:flex gap-3">
-                        {!isAuth ? (
-                        <>
-                            <NavLink to="/login">
-                                <button className="px-5 py-2 rounded-xl border-2 border-mauve-600 
-                                                hover:border-emerald-700 hover:text-emerald-400
-                                                text-mauve-300 font-semibold cursor-pointer
-                                                transition-all duration-300">
-                                    Login
-                                </button>
-                            </NavLink>
-                            <NavLink to="/signup">
-                                <button className="px-5 py-2 rounded-xl bg-linear-to-r from-emerald-800 to-green-700 
-                                                text-mauve-100 font-semibold cursor-pointer
-                                                hover:from-green-700 hover:to-emerald-800
-                                                transition-all duration-300 hover:scale-105">
-                                    Sign Up
-                                </button>
-                            </NavLink>
-                        </>
-                        ) : (
-                            <NavLink to="/profile">
-                                <button className="px-5 py-2 rounded-xl bg-linear-to-r from-emerald-800 to-green-700 
-                                                text-mauve-100 font-semibold cursor-pointer
-                                                hover:from-green-700 hover:to-emerald-800
-                                                transition-all duration-300 hover:scale-105">
-                                    Profile
-                                </button>
-                            </NavLink>
-                        )}
+
+                    <nav className="hidden lg:flex" aria-label="Main">
+                        <ul className="flex items-center gap-1">
+                            {NAV_LINKS.map((link) => (
+                                <li key={link.to}>
+                                    <NavLink
+                                        to={link.to}
+                                        className={({ isActive }) =>
+                                            `rounded-full px-4 py-2 text-[0.9375rem] font-medium transition-colors duration-200 ${
+                                                isActive
+                                                    ? 'bg-paper/10 text-sprout'
+                                                    : 'text-paper/75 hover:bg-paper/8 hover:text-paper'
+                                            }`
+                                        }
+                                    >
+                                        {link.label}
+                                    </NavLink>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <NavLink
+                            to="/cart"
+                            className="relative flex h-11 w-11 items-center justify-center rounded-full text-paper transition-colors duration-200 hover:bg-paper/10"
+                            aria-label={
+                                cartCount === 0
+                                    ? 'Cart, empty'
+                                    : `Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`
+                            }
+                        >
+                            <ShoppingBag className="h-5 w-5" aria-hidden />
+                            {cartCount > 0 && (
+                                <span
+                                    key={bump}
+                                    className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 animate-bump items-center justify-center rounded-full bg-sprout px-1 font-mono text-[0.625rem] font-semibold text-pine"
+                                    aria-hidden
+                                >
+                                    {cartCount}
+                                </span>
+                            )}
+                        </NavLink>
+
+                        <div className="hidden md:flex md:items-center md:gap-2">
+                            {isAuth ? (
+                                <NavLink to="/profile">
+                                    <Button variant="onDark" size="sm">
+                                        Profile
+                                    </Button>
+                                </NavLink>
+                            ) : (
+                                <>
+                                    <NavLink to="/login">
+                                        <Button variant="onDarkOutline" size="sm">
+                                            Sign in
+                                        </Button>
+                                    </NavLink>
+                                    <NavLink to="/signup">
+                                        <Button variant="onDark" size="sm">
+                                            Create account
+                                        </Button>
+                                    </NavLink>
+                                </>
+                            )}
+                        </div>
+
+                        <Button
+                            variant="onDarkOutline"
+                            size="icon"
+                            className="lg:hidden"
+                            onClick={() => setIsOpen(true)}
+                            aria-label="Open menu"
+                            aria-expanded={isOpen}
+                        >
+                            <MenuIcon className="h-5 w-5" aria-hidden />
+                        </Button>
                     </div>
-                    <button className="lg:hidden p-2" onClick={handleMenuClick}>
-                        <img className="w-8 filter invert sepia hue-rotate-90" src={Menu} alt="menu" />
-                    </button>
-                    {<DropdownMenu state={isOpen}/>}
                 </div>
             </header>
-            <main>
-                <Outlet/>
+
+            <DropdownMenu state={isOpen} onClose={() => setIsOpen(false)} />
+
+            <main id="main" className="flex-1">
+                <Outlet />
             </main>
-            <footer className="bg-mauve-900 text-mauve-300">
-                <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-40 mb-8 sm:mb-12 lg:grid-cols-3">
+
+            <footer className="tex-pine bg-pine text-paper/70">
+                <div className="wrap py-14 sm:py-16">
+                    <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.3fr] lg:gap-16">
                         <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="text-2xl sm:text-3xl font-bold text-emerald-800">
-                                    GreenTech
-                                </span>
-                            </div>
-                            <p className="text-mauve-400 text-xs sm:text-sm leading-relaxed mb-4">
-                                Sustainable technology for a better future. We make eco-friendly tech 
-                                accessible to everyone while protecting our planet.
+                            <Wordmark />
+                            <p className="mt-5 max-w-sm text-sm leading-relaxed">
+                                Refurbished and low-impact electronics. Every device carries a GreenTech Index,
+                                so you can compare on more than price
                             </p>
+                            <p className="eyebrow mt-6 text-sprout">Free shipping over $500</p>
                         </div>
-                        <div className="hidden md:block">
-                            <h3 className="text-mauve-100 font-semibold text-lg mb-4">Quick Links</h3>
-                            <ul className="space-y-2">
-                                <li className="hover:text-emerald-400 transition-colors duration-300 text-sm">
-                                    <NavLink to="/about">
-                                        About us
-                                    </NavLink>
-                                </li>
-                                <li className="hover:text-emerald-400 transition-colors duration-300 text-sm">
-                                    <NavLink to="/products">
-                                        Catalog
-                                    </NavLink>
-                                </li>
-                                <li className="hover:text-emerald-400 transition-colors duration-300 text-sm">
-                                    <NavLink to="/home">
-                                        Home
-                                    </NavLink>
-                                </li>
-                                <li className="hover:text-emerald-400 transition-colors duration-300 text-sm">
-                                    <NavLink to="/cart">
-                                        Cart
-                                    </NavLink>
-                                </li>
+
+                        <nav aria-label="Footer">
+                            <h2 className="eyebrow text-paper/60">Browse</h2>
+                            <ul className="mt-4 space-y-3">
+                                {[...NAV_LINKS, { to: '/cart', label: 'Cart' }].map((link) => (
+                                    <li key={link.to}>
+                                        <NavLink
+                                            to={link.to}
+                                            className="text-sm transition-colors duration-200 hover:text-sprout"
+                                        >
+                                            {link.label}
+                                        </NavLink>
+                                    </li>
+                                ))}
                             </ul>
-                        </div>
+                        </nav>
+
                         <div>
-                            <h3 className="text-mauve-100 font-semibold text-base sm:text-lg mb-3 sm:mb-4">Stay Connected</h3>
-                            <div className="space-y-2 mb-4">
-                                <p className="flex items-center gap-2 text-xs sm:text-sm text-mauve-400">
-                                    <svg className="w-4 h-4 fill-emerald-500 shrink-0" viewBox="0 0 24 24">
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
-                                        <circle cx="12" cy="10" r="3"/>
-                                    </svg>
-                                    742 Evergreen St, Greenland, OR 00000
+                            <h2 className="eyebrow text-paper/60">Get the restock list</h2>
+                            <p className="mt-4 text-sm leading-relaxed">
+                                Refurbished stock moves fast. One email when something good lands, nothing else
+                            </p>
+                            <Subscribe />
+                            <address className="mt-6 space-y-1 font-mono text-xs not-italic text-paper/60">
+                                <p>742 Evergreen St, Greenland, OR 00000</p>
+                                <p>
+                                    <a href="tel:+79982486767" className="hover:text-sprout">
+                                        8 (998) 248-67-67
+                                    </a>
                                 </p>
-                                <p className="flex items-center gap-2 text-xs sm:text-sm text-mauve-400">
-                                    <svg className="w-4 h-4 fill-emerald-500 shrink-0" viewBox="0 0 24 24">
-                                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
-                                    </svg>
-                                    8 (998)-248-67-67
+                                <p>
+                                    <a href="mailto:egorb2302@greentechstore.com" className="hover:text-sprout">
+                                        egorb2302@greentechstore.com
+                                    </a>
                                 </p>
-                                <p className="flex items-center gap-2 text-xs sm:text-sm text-mauve-400">
-                                    <svg className="w-4 h-4 fill-emerald-500 shrink-0" viewBox="0 0 24 24">
-                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                                        <polyline points="22,6 12,13 2,6"/>
-                                    </svg>
-                                    egorb2302@greentechstore.com
-                                </p>
-                            </div>
-                            {<Subscribe />}
+                            </address>
                         </div>
                     </div>
-                    <div className="border-t border-mauve-700 pt-6 sm:pt-8">
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
-                            <p className="text-mauve-400 text-xs sm:text-sm order-2 md:order-1">
-                                © 2026 GreenTech. All rights reserved.
-                            </p>
-                            <div className="flex gap-3 sm:gap-6 order-1 md:order-2">
-                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-xs sm:text-sm transition-colors duration-300">
-                                    Privacy Policy
-                                </a>
-                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-xs sm:text-sm transition-colors duration-300">
-                                    Terms of Service
-                                </a>
-                                <a href="#" className="text-mauve-400 hover:text-emerald-400 text-xs sm:text-sm transition-colors duration-300">
-                                    Cookie Policy
-                                </a>
-                            </div>
-                        </div>
+
+                    <div className="mt-12 flex flex-col gap-4 border-t border-paper/12 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="font-mono text-xs text-paper/60">© 2026 GreenTech</p>
+                        <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                            {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map((item) => (
+                                <li key={item}>
+                                    <a href="#" className="font-mono text-xs text-paper/60 hover:text-sprout">
+                                        {item}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                 </div>
             </footer>
-        </>
-    )
+        </div>
+    );
 }

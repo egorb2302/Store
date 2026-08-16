@@ -1,146 +1,123 @@
-import { useNavigate } from "react-router";
-import useAuthStore from "../stores/auth";
-import { Link } from 'react-router';
+import { ChevronRight, LogOut, Mail, ShieldCheck, Sprout, User as UserIcon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { Button } from '../components/ui/button';
+import { buttonVariants } from '../components/ui/button-variants';
+import { cn } from '../lib/utils';
+import useAuthStore from '../stores/auth';
 
 export default function Profile({ onLogout }: { onLogout: () => void }) {
     const { user } = useAuthStore();
     const nav = useNavigate();
-    
-    const handleLogout = () => {
-        onLogout()
-        nav('/home')
+
+    // Тут стоял throw в рендере. Маршрут защищён, но защита падает на один кадр
+    // раньше данных, и вместо профиля можно было получить белый экран.
+    if (!user) {
+        return (
+            <div className="wrap flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
+                <h1 className="text-4xl font-extrabold text-pine">You are signed out</h1>
+                <p className="mt-4 text-bark">Sign in again to see your account</p>
+                <Link to="/login" className={cn(buttonVariants({ size: 'lg' }), 'mt-8')}>
+                    Sign in
+                </Link>
+            </div>
+        );
     }
-    
-    if (!user) throw new Error('User not found')
+
+    const handleLogout = () => {
+        onLogout();
+        nav('/home');
+    };
+
+    const details = [
+        { label: 'Full name', value: user.name || 'Not specified', icon: UserIcon },
+        { label: 'Email', value: user.email, icon: Mail },
+        { label: 'Password', value: '••••••••', icon: ShieldCheck },
+    ];
 
     return (
-        <div className="min-h-screen bg-mauve-950 py-12 px-4">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex items-center gap-2 text-sm mb-8 text-mauve-500">
-                    <Link to="/" className="hover:text-emerald-400 transition-colors duration-300">Home</Link>
-                    <span>/</span>
-                    <span className="text-mauve-300">Profile</span>
-                </div>
-                <div className="mb-10">
-                    <h1 className="text-mauve-100 font-bold text-4xl mb-2">My Profile</h1>
-                    <p className="text-mauve-400">Manage your account and eco-preferences</p>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-1">
-                        <div className="bg-mauve-900 rounded-2xl border border-mauve-700 p-8 text-center">
-                            <div className="w-32 h-32 bg-emerald-800 rounded-full flex items-center justify-center mx-auto mb-4
-                                            border-4 border-emerald-700">
-                                <span className="text-mauve-100 text-5xl font-bold">
-                                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                                </span>
-                            </div>
-                            <h2 className="text-mauve-100 font-bold text-2xl mb-1">
-                                {user?.name || 'User'}
-                            </h2>
-                            <p className="text-mauve-400 text-sm mb-6">{user?.email}</p>
-                            <div className="flex items-center justify-center gap-2 mb-6">
-                                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                                <span className="text-emerald-400 text-sm font-medium">Active Account</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 mb-6">
-                                <div className="bg-mauve-800 rounded-xl p-3">
-                                    <p className="text-emerald-400 font-bold text-xl">12</p>
-                                    <p className="text-mauve-400 text-xs">Orders</p>
-                                </div>
-                                <div className="bg-mauve-800 rounded-xl p-3">
-                                    <p className="text-emerald-400 font-bold text-xl">5</p>
-                                    <p className="text-mauve-400 text-xs">Reviews</p>
-                                </div>
-                                <div className="bg-mauve-800 rounded-xl p-3">
-                                    <p className="text-emerald-400 font-bold text-xl">250</p>
-                                    <p className="text-mauve-400 text-xs">Green Points</p>
-                                </div>
-                            </div>
-                            <button 
-                                onClick={handleLogout}
-                                className="w-full py-3 px-6 bg-mauve-800 border-2 border-red-500/30 
-                                        text-red-400 font-semibold rounded-xl cursor-pointer 
-                                        transition-all duration-300
-                                        hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-300
-                                        active:scale-95
-                                        flex items-center justify-center gap-2"
-                            >
-                                Logout
-                            </button>
+        <div className="wrap py-12 sm:py-16">
+            <nav aria-label="Breadcrumb">
+                <ol className="flex items-center gap-1 font-mono text-xs text-bark-soft">
+                    <li>
+                        <Link to="/home" className="hover:text-moss">
+                            Home
+                        </Link>
+                    </li>
+                    <ChevronRight className="h-3 w-3" aria-hidden />
+                    <li className="text-bark" aria-current="page">
+                        Profile
+                    </li>
+                </ol>
+            </nav>
+
+            <header className="mt-8">
+                <p className="eyebrow text-bark">Account</p>
+                <h1 className="mt-3 text-4xl font-extrabold text-pine sm:text-5xl">
+                    {user.name || 'Your profile'}
+                </h1>
+                <p className="mt-3 font-mono text-sm text-bark">{user.email}</p>
+            </header>
+
+            <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.4fr]">
+                <section className="tex-pulp h-fit rounded-card border border-fibre bg-pulp p-7">
+                    <div className="flex items-center gap-4">
+                        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-pine font-display text-2xl font-extrabold text-sprout">
+                            {(user.name || user.email).charAt(0).toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                            <p className="truncate font-display text-xl font-bold text-pine">
+                                {user.name || 'User'}
+                            </p>
+                            <p className="mt-1 flex items-center gap-1.5 text-sm text-moss">
+                                <span className="h-1.5 w-1.5 rounded-full bg-moss" aria-hidden />
+                                Active account
+                            </p>
                         </div>
                     </div>
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-mauve-900 rounded-2xl border border-mauve-700 p-8">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-mauve-100 font-bold text-2xl">Personal Information</h2>
-                                <button className="text-emerald-400 text-sm font-medium hover:text-emerald-300
-                                transition-colors duration-300 cursor-pointer">
-                                    Edit
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="text-mauve-400 text-sm mb-1 block">Full Name</label>
-                                    <div className="flex items-center gap-3 p-4 bg-mauve-800 rounded-xl border border-mauve-700">
-                                        <svg className="w-5 h-5 fill-mauve-500 shrink-0" viewBox="0 0 24 24">
-                                            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                        </svg>
-                                        <span className="text-mauve-200 font-medium">
-                                            {user?.name || 'Not specified'}
-                                        </span>
-                                    </div>
+
+                    <Button variant="danger" className="mt-7 w-full" onClick={handleLogout}>
+                        <LogOut className="h-4 w-4" aria-hidden />
+                        Sign out
+                    </Button>
+                </section>
+
+                <div className="space-y-8">
+                    <section className="rounded-card border border-fibre bg-paper p-7">
+                        <h2 className="text-2xl font-bold text-pine">Account details</h2>
+                        <dl className="mt-6 divide-y divide-fibre">
+                            {details.map(({ label, value, icon: Icon }) => (
+                                <div key={label} className="flex items-center gap-4 py-4">
+                                    <Icon className="h-4 w-4 shrink-0 text-bark-soft" aria-hidden />
+                                    <dt className="w-32 shrink-0 text-sm text-bark">{label}</dt>
+                                    <dd className="min-w-0 flex-1 truncate font-mono text-[0.9375rem] text-pine">
+                                        {value}
+                                    </dd>
                                 </div>
-                                <div>
-                                    <label className="text-mauve-400 text-sm mb-1 block">Email Address</label>
-                                    <div className="flex items-center gap-3 p-4 bg-mauve-800 rounded-xl border border-mauve-700">
-                                        <svg className="w-5 h-5 fill-mauve-500 shrink-0" viewBox="0 0 24 24">
-                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                                            <polyline points="22,6 12,13 2,6"/>
-                                        </svg>
-                                        <span className="text-mauve-200 font-medium line-clamp-1">{user?.email}</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-mauve-400 text-sm mb-1 block">User ID</label>
-                                    <div className="flex items-center gap-3 p-4 bg-mauve-800 rounded-xl border border-mauve-700">
-                                        <svg className="w-5 h-5 fill-mauve-500 shrink-0" viewBox="0 0 24 24">
-                                            <path d="M10 13a2 2 0 110-4 2 2 0 010 4zm0 0a5 5 0 015 5v1H5v-1a5 5 0 015-5z"/>
-                                        </svg>
-                                        <span className="text-mauve-200 font-medium text-sm">{user?.id}</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-mauve-400 text-sm mb-1 block">Password</label>
-                                    <div className="flex items-center gap-3 p-4 bg-mauve-800 rounded-xl border border-mauve-700">
-                                        <svg className="w-5 h-5 fill-mauve-500 shrink-0" viewBox="0 0 24 24">
-                                            <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                        </svg>
-                                        <span className="text-mauve-200 font-medium">••••••••</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-linear-to-r from-emerald-800 to-green-700 rounded-2xl p-8 text-center">
-                            <h3 className="text-mauve-100 font-bold text-2xl mb-2">Your Green Impact</h3>
-                            <p className="text-emerald-200 mb-4">You've saved 45 kg of CO₂ by choosing eco-friendly products!</p>
-                            <div className="flex justify-center gap-8">
-                                <div>
-                                    <p className="text-mauve-100 font-bold text-3xl">12</p>
-                                    <p className="text-emerald-200 text-sm">Trees Planted</p>
-                                </div>
-                                <div>
-                                    <p className="text-mauve-100 font-bold text-3xl">250</p>
-                                    <p className="text-emerald-200 text-sm">Green Points</p>
-                                </div>
-                                <div>
-                                    <p className="text-mauve-100 font-bold text-3xl">5</p>
-                                    <p className="text-emerald-200 text-sm">Badges Earned</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                            ))}
+                        </dl>
+                    </section>
+
+                    {/* Пустое состояние вместо выдуманных «12 заказов» и «45 кг CO₂»:
+                        считать их пока не из чего, а нарисованные цифры в личном
+                        кабинете читаются как обман, а не как заглушка. */}
+                    <section className="tex-pine rounded-card bg-pine p-7 sm:p-9">
+                        <h2 className="flex items-center gap-2 text-2xl font-bold text-paper">
+                            <Sprout className="h-5 w-5 text-sprout" aria-hidden />
+                            Your green impact
+                        </h2>
+                        <p className="mt-3 max-w-md text-paper/70">
+                            Once your first order ships, this is where you will see what it added up to: CO₂e
+                            avoided, recycled material bought, devices kept out of landfill
+                        </p>
+                        <Link
+                            to="/products"
+                            className={cn(buttonVariants({ variant: 'onDark' }), 'mt-7')}
+                        >
+                            Start with the catalog
+                        </Link>
+                    </section>
                 </div>
             </div>
         </div>
-    )
+    );
 }
